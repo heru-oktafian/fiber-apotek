@@ -50,7 +50,7 @@ Pastikan Anda telah menginstal yang berikut ini:
 * **PostgreSQL** (Database)
 * **Redis** (Server Caching/Session)
 * **Git**
-* **Fiber v2**
+* **Fiber v2** (Framework Web)
 
 ### 📦 Installation (Instalasi)
 
