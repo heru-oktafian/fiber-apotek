@@ -50,18 +50,18 @@ func AuthRoutes(app *fiber.App) {
 	})
 
 	// Auth Endpoints
-	app.Post("/login", controllers.Login)
-	app.Post("/logout", controllers.Logout)
+	app.Post("/api/login", controllers.Login)
+	app.Post("/api/logout", controllers.Logout)
 	// app.Post("/register", controllers.CreateUser)
-	app.Get("/profile", middlewares.JWTMiddleware, controllers.GetProfile)
+	app.Get("/api/profile", middlewares.JWTMiddleware, controllers.GetProfile)
 	// app.Get("/list_branches", middlewares.JWTMiddleware, controllers.GetBranchByUserId)
 
 	// SetBranch Endpoint
-	app.Post("/set_branch", controllers.SetBranch)
+	app.Post("/api/set_branch", controllers.SetBranch)
 	// api := app.Group("/api", middlewares.JWTMiddleware)
 
 	// Endpoint to generate file .env
-	app.Post("/update-env", middlewares.JWTMiddleware, middlewares.RoleMiddleware("superadmin", "administrator"), func(c *fiber.Ctx) error {
+	app.Post("/api/update-env", middlewares.JWTMiddleware, middlewares.RoleMiddleware("superadmin", "administrator"), func(c *fiber.Ctx) error {
 		type request struct {
 			Content string `json:"content"`
 		}

@@ -3,10 +3,12 @@ package main
 import (
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/heru-oktafian/fiber-apotek/configs"
+	"github.com/heru-oktafian/fiber-apotek/helpers"
 	"github.com/heru-oktafian/fiber-apotek/routers"
 	"github.com/heru-oktafian/fiber-apotek/seeders"
 	"github.com/heru-oktafian/fiber-apotek/services"
@@ -71,10 +73,30 @@ func main() {
 	}()
 
 	// Inisialisasi Fiber
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		DisableStartupMessage: true, // ⛔ wajib
+	})
 
 	// Setup routes
 	routers.AuthRoutes(app)
+
+	// Count total routes
+	routeCount := 0
+	for _, routes := range app.Stack() {
+		routeCount += len(routes)
+	}
+
+	port, err := strconv.Atoi(serverPort)
+	if err != nil {
+		log.Fatal("Invalid SERVER_PORT: must be a number")
+	}
+
+	helpers.PrintFiberLikeBanner(
+		os.Getenv("APPNAME"),
+		"0.0.0.0",
+		port,
+		routeCount, // jumlah handlers
+	)
 
 	// Start Fiber server
 	log.Fatal(app.Listen(":" + serverPort))

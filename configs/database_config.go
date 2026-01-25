@@ -41,24 +41,28 @@ func SetupDB() (err error) {
 
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.New(
-			log.New(os.Stdout, "\r\n", log.LstdFlags), // Output log
+			log.New(os.Stdout, "\r\n", log.LstdFlags),
 			logger.Config{
 				SlowThreshold: time.Second,
-				LogLevel:      logger.Silent, // ⬅️ Ubah sesuai kebutuhan: Silent, Error, Warn, Info
-				Colorful:      true,
+				// LogLevel:      logger.Info, // sementara Info biar kelihatan
+				LogLevel: logger.Silent,
+				Colorful: true,
 			},
 		),
 	})
 
-	DB.AutoMigrate(
+	if err != nil {
+		log.Fatalf("failed to connect to PostgreSQL database: %v", err)
+	}
+
+	err = DB.AutoMigrate(
 		&models.User{},
 		&models.Branch{},
 		&models.UserBranch{},
 	)
 
-	// Check connection Postgres
 	if err != nil {
-		log.Fatalf("failed to connect to PostgreSQL database: %v", err)
+		log.Fatalf("failed to automigrate: %v", err)
 	}
 
 	// Panggil fungsi migrasi jika ada perubahan atau penambahan kolom
