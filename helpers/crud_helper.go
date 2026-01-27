@@ -10,6 +10,7 @@ import (
 
 	fiber "github.com/gofiber/fiber/v2"
 	models "github.com/heru-oktafian/fiber-apotek/models"
+	services "github.com/heru-oktafian/fiber-apotek/services"
 	gorm "gorm.io/gorm"
 )
 
@@ -96,7 +97,7 @@ func CreateResource(c *fiber.Ctx, db *gorm.DB, model interface{}, IDCode string)
 		return JSONResponse(c, fiber.StatusBadRequest, "Invalid input", err)
 	}
 
-	branchID, _ := GetClaimsToken(c, "branch_id")
+	branchID, _ := services.GetBranchID(c)
 	generatedID := GenerateID(IDCode)
 
 	// Gunakan reflection untuk set field
@@ -135,7 +136,7 @@ func CreateResourceInc(c *fiber.Ctx, db *gorm.DB, model interface{}) error {
 	}
 
 	// Set branch_id
-	branchID, _ := GetClaimsToken(c, "branch_id")
+	branchID, _ := services.GetBranchID(c)
 
 	// Gunakan reflection untuk set field jika ada
 	v := reflect.ValueOf(model).Elem()
@@ -217,7 +218,7 @@ func DeleteResource(c *fiber.Ctx, db *gorm.DB, model interface{}, id string) err
 // GetAllResources is function for get all resources
 func GetAllResources(c *fiber.Ctx, db *gorm.DB, models interface{}) error {
 	// Get branch id
-	branchID, _ := GetClaimsToken(c, "branch_id")
+	branchID, _ := services.GetBranchID(c)
 
 	// Find all resources
 	if err := db.Where("branch_id = ?", branchID).Find(models).Error; err != nil {
@@ -229,12 +230,12 @@ func GetAllResources(c *fiber.Ctx, db *gorm.DB, models interface{}) error {
 
 // GetAllBranches is function for get all resources of branches
 func GetAllBranches(c *fiber.Ctx, db *gorm.DB, models interface{}) error {
-	userRole, err := GetClaimsToken(c, "user_role")
+	userRole, err := services.GetUserRole(c)
 	if err != nil {
 		return JSONResponse(c, fiber.StatusUnauthorized, "User role tidak ditemukan di token", nil)
 	}
 
-	userID, err := GetClaimsToken(c, "sub")
+	userID, err := services.GetUserID(c)
 	if err != nil {
 		return JSONResponse(c, fiber.StatusUnauthorized, "User ID tidak ditemukan di token", nil)
 	}
@@ -264,12 +265,12 @@ func GetAllBranches(c *fiber.Ctx, db *gorm.DB, models interface{}) error {
 
 // GetAllUsers is function for get all resources of users
 func GetAllUsers(c *fiber.Ctx, db *gorm.DB, models interface{}) error {
-	userRole, err := GetClaimsToken(c, "user_role")
+	userRole, err := services.GetUserRole(c)
 	if err != nil {
 		return JSONResponse(c, fiber.StatusUnauthorized, "User role tidak ditemukan di token", nil)
 	}
 
-	branchID, err := GetClaimsToken(c, "branch_id")
+	branchID, err := services.GetBranchID(c)
 	if err != nil {
 		return JSONResponse(c, fiber.StatusUnauthorized, "Branch ID tidak ditemukan di token", nil)
 	}

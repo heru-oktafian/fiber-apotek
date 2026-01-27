@@ -6,6 +6,7 @@ import (
 	fiber "github.com/gofiber/fiber/v2"
 	helpers "github.com/heru-oktafian/fiber-apotek/helpers"
 	models "github.com/heru-oktafian/fiber-apotek/models"
+	services "github.com/heru-oktafian/fiber-apotek/services"
 )
 
 func JWTMiddleware(c *fiber.Ctx) error {
@@ -17,7 +18,7 @@ func JWTMiddleware(c *fiber.Ctx) error {
 
 func RoleMiddleware(allowedRoles ...models.UserRole) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		userRole, _ := helpers.GetClaimsToken(c, "user_role")
+		userRole, _ := services.GetUserRole(c)
 		// fmt.Println("user_role:", userRole)
 		userRole = strings.ToLower(userRole)
 
