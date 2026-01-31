@@ -7,8 +7,9 @@ import (
 
 func UserSeed() {
 	users := []models.User{
-		{ID: "USR250118132201", Username: "superadmin", Password: "Superadmin123", Name: "Super Admin", UserRole: "superadmin", UserStatus: "active"},
-		{ID: "USR250118132202", Username: "operator", Password: "Operator123", Name: "Operator", UserRole: "operator", UserStatus: "active"},
+		{ID: "USR250118132201", Username: "vita_fauzi", Password: "Sigala1102", Name: "Vita Fauzi. M", UserRole: "superadmin", UserStatus: "active"},
+		{ID: "USR250118132202", Username: "fanny", Password: "Izahfanny17", Name: "Fanny", UserRole: "operator", UserStatus: "active"},
+		{ID: "USR250118132203", Username: "zia", Password: "zia123", Name: "Zia", UserRole: "operator", UserStatus: "active"},
 	}
 
 	// Hash password for each user

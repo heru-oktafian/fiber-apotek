@@ -2,24 +2,6 @@ package models
 
 import "time"
 
-// Initialize custom type for ENUM JournalMethod
-type JournalMethod string
-
-const (
-	Manual    JournalMethod = "manual"
-	Automatic JournalMethod = "automatic"
-)
-
-// Initialize custom type for ENUM SubcriptionType
-type SubcriptionType string
-
-const (
-	Quota    SubcriptionType = "quota"
-	Month    SubcriptionType = "month"
-	Semester SubcriptionType = "semester"
-	Year     SubcriptionType = "year"
-)
-
 // Branch Struct for branch model in database
 type Branch struct {
 	ID               string          `gorm:"type:varchar(15);primaryKey" json:"id" validate:"required"`
@@ -27,8 +9,14 @@ type Branch struct {
 	Address          string          `gorm:"type:text;" json:"address"`
 	Phone            string          `gorm:"type:varchar(100);" json:"phone"`
 	Email            string          `gorm:"type:varchar(100);" json:"email"`
-	OwnerId          string          `gorm:"type:varchar(100);" json:"owner_id"`
-	OwnerName        string          `gorm:"type:varchar(255);" json:"owner_name"`
+	SiaId            string          `gorm:"type:varchar(100);" json:"sia_id"`
+	SiaName          string          `gorm:"type:varchar(255);" json:"sia_name"`
+	PsaId            string          `gorm:"type:varchar(100);" json:"psa_id"`
+	PsaName          string          `gorm:"type:varchar(255);" json:"psa_name"`
+	Sipa             string          `gorm:"type:varchar(100);" json:"sipa"`
+	SipaName         string          `gorm:"type:varchar(255);" json:"sipa_name"`
+	ApingId          string          `gorm:"type:varchar(100);" json:"aping_id"`
+	ApingName        string          `gorm:"type:varchar(255);" json:"aping_name"`
 	BankName         string          `gorm:"type:varchar(255);" json:"bank_name"`
 	AccountName      string          `gorm:"type:varchar(255);" json:"account_name"`
 	AccountNumber    string          `gorm:"type:varchar(100);" json:"account_number"`
@@ -55,8 +43,14 @@ type ProfileStruct struct {
 	Address       string        `gorm:"type:text;" json:"address"`
 	Phone         string        `gorm:"type:varchar(100);" json:"phone"`
 	Email         string        `gorm:"type:varchar(100);" json:"email"`
-	OwnerId       string        `gorm:"type:varchar(100);" json:"owner_id"`
-	OwnerName     string        `gorm:"type:varchar(255);" json:"owner_name"`
+	SiaId         string        `gorm:"type:varchar(100);" json:"sia_id"`
+	SiaName       string        `gorm:"type:varchar(255);" json:"sia_name"`
+	PsaId         string        `gorm:"type:varchar(100);" json:"psa_id"`
+	PsaName       string        `gorm:"type:varchar(255);" json:"psa_name"`
+	Sipa          string        `gorm:"type:varchar(100);" json:"sipa"`
+	SipaName      string        `gorm:"type:varchar(255);" json:"sipa_name"`
+	ApingId       string        `gorm:"type:varchar(100);" json:"aping_id"`
+	ApingName     string        `gorm:"type:varchar(255);" json:"aping_name"`
 	BankName      string        `gorm:"type:varchar(255);" json:"bank_name"`
 	AccountName   string        `gorm:"type:varchar(255);" json:"account_name"`
 	AccountNumber string        `gorm:"type:varchar(100);" json:"account_number"`

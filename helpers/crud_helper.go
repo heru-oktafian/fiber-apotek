@@ -404,8 +404,7 @@ func DeleteResourceUser(c *fiber.Ctx, db *gorm.DB, model interface{}, id string)
 // Contoh: "22 Juni 2025"
 func FormatIndonesianDate(t time.Time) string {
 	months := []string{
-		"Januari", "Februari", "Maret", "April", "Mei", "Juni",
-		"Juli", "Agustus", "September", "Oktober", "November", "Desember",
+		"Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember",
 	}
 	day := t.Day()
 	month := months[t.Month()-1]

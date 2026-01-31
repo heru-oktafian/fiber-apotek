@@ -11,7 +11,7 @@ func BranchSeed() {
 	t := time.Date(2026, time.December, 31, 0, 0, 0, 0, time.UTC)
 
 	branch := []models.Branch{
-		{ID: "BRC0551960Y9TY0", BranchName: "Abi Foundation", Address: "Jl. Raya Gudo, No. 101A, Kecamatan Gudo, Kabupaten Jombang, Jawa Timur", Phone: "085236990001", Email: "info@heruoktafian.com", OwnerId: "3517011710880001", OwnerName: "Heru Oktafian, ST., CTT", BankName: "Bank BCA", AccountName: "Heru Oktafian", AccountNumber: "1520582106", JournalMethod: "automatic", TaxPercentage: 11, BranchStatus: "active", LicenseDate: t},
+		{ID: "BRC250118132203", BranchName: "Ziida Farma", Address: "Dusun Mireng, RT./RW. 001/003, Desa Sumberagung, Kecamatan Megaluh, Kabupaten Jombang, Jawa Timur", Phone: "085335833636", Email: "vita.alfarizqi@gmail.com", SiaId: "08012400152290001", SiaName: "Apotek Ziida Farma", PsaId: "3517011710880001", PsaName: "Vita Fauzi. M", Sipa: "446/065/415.35/2024", SipaName: "Vita Fauzi. M", JournalMethod: "automatic", TaxPercentage: 11, BranchStatus: "active", LicenseDate: t},
 	}
 	config.DB.Create(&branch)
 }
