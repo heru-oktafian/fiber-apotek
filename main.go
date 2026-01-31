@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/heru-oktafian/fiber-apotek/configs"
 	"github.com/heru-oktafian/fiber-apotek/helpers"
-	"github.com/heru-oktafian/fiber-apotek/routers"
+	"github.com/heru-oktafian/fiber-apotek/routes"
 	"github.com/heru-oktafian/fiber-apotek/seeders"
 	"github.com/heru-oktafian/fiber-apotek/services"
 	"github.com/joho/godotenv"
@@ -78,7 +78,7 @@ func main() {
 	})
 
 	// Setup routes
-	routers.AuthRoutes(app)
+	routes.AuthRoutes(app)
 
 	// Count total routes
 	routeCount := 0
