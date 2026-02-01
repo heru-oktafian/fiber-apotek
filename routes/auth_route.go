@@ -54,7 +54,7 @@ func AuthRoutes(app *fiber.App) {
 	app.Post("/api/logout", controllers.Logout)
 	// app.Post("/register", controllers.CreateUser)
 	app.Get("/api/profile", middlewares.JWTMiddleware, controllers.GetProfile)
-	// app.Get("/list_branches", middlewares.JWTMiddleware, controllers.GetBranchByUserId)
+	app.Get("/api/list_branches", middlewares.JWTMiddleware, controllers.GetBranchByUserId)
 
 	// SetBranch Endpoint
 	app.Post("/api/set_branch", controllers.SetBranch)
