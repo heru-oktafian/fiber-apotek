@@ -59,6 +59,9 @@ func SetupDB() (err error) {
 		&models.User{},
 		&models.Branch{},
 		&models.UserBranch{},
+		&models.Unit{},
+		&models.Product{},
+		&models.UnitConversion{},
 	)
 
 	if err != nil {
