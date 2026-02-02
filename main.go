@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/heru-oktafian/fiber-apotek/configs"
 	"github.com/heru-oktafian/fiber-apotek/helpers"
 	"github.com/heru-oktafian/fiber-apotek/routes"
@@ -76,6 +78,16 @@ func main() {
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true, // ⛔ wajib
 	})
+
+	// Adding logger middleware of fiber
+	app.Use(logger.New())
+
+	// Enable CORS
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*", // Sesuaikan jika kamu ingin membatasi domain tertentu
+		AllowMethods: "GET,POST,PUT,DELETE",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+	}))
 
 	// Setup routes
 	routes.AuthRoutes(app)

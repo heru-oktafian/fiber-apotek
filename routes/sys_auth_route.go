@@ -4,8 +4,6 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/heru-oktafian/fiber-apotek/controllers"
 	"github.com/heru-oktafian/fiber-apotek/helpers"
 	"github.com/heru-oktafian/fiber-apotek/middlewares"
@@ -13,14 +11,6 @@ import (
 )
 
 func AuthRoutes(app *fiber.App) {
-	// Adding logger middleware of fiber
-	app.Use(logger.New())
-
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*", // Sesuaikan jika kamu ingin membatasi domain tertentu
-		AllowMethods: "GET,POST,PUT,DELETE",
-		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
-	}))
 
 	app.Get("/coba", func(c *fiber.Ctx) error {
 		// defaultMember := helpers.GetMemberDefault(config.DB, "BRC250118132203")
