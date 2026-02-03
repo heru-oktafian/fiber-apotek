@@ -12,21 +12,21 @@ import (
 	config "github.com/heru-oktafian/fiber-apotek/configs"
 )
 
-// TokenValidation validate token
+// TokenValidation memvalidasi token
 func TokenValidation(c *fiber.Ctx, key string) error {
-	// Get token value from header Authorization
+	// Ambil nilai token dari header Authorization
 	token := c.Get("Authorization")
-	// Remove prefix "Bearer " if exist
+	// Hapus awalan "Bearer " jika ada
 	if strings.HasPrefix(token, "Bearer ") {
 		token = token[len("Bearer "):]
 	}
 
-	// Check if token is empty
+	// Periksa apakah token kosong
 	if token == "" {
 		return JSONResponse(c, fiber.StatusUnauthorized, "Missing token", "Insert valid token to access this endpoint!")
 	}
 
-	// Check token in blacklist Redis
+	// Periksa token di daftar hitam Redis
 	ctx := context.Background()
 	redisKey := fmt.Sprintf("blacklist:%s", token)
 	rdb := config.RDB
@@ -41,7 +41,7 @@ func TokenValidation(c *fiber.Ctx, key string) error {
 		return JSONResponse(c, fiber.StatusUnauthorized, "Using token failed", "Token was revoked, please login again!")
 	}
 
-	// Verify token using secret key
+	// Verifikasi token menggunakan kunci rahasia
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		secretKey := []byte(os.Getenv("JWT_SECRET"))
 		return secretKey, nil
@@ -51,12 +51,12 @@ func TokenValidation(c *fiber.Ctx, key string) error {
 		return JSONResponse(c, fiber.StatusUnauthorized, "Invalid token", "Try to login again!")
 	}
 
-	// Check klaim token (opsional, misalnya validasi user_id, role, dll.)
+	// Periksa klaim token (opsional, misalnya validasi user_id, role, dll.)
 	claims, ok := parsedToken.Claims.(jwt.MapClaims)
 	if !ok || claims[key] == nil {
 		return JSONResponse(c, fiber.StatusUnauthorized, "Invalid token claims", "Try to login again!")
 	}
 
-	// Go to next middleware
+	// Lanjut ke middleware berikutnya
 	return c.Next()
 }

@@ -12,28 +12,28 @@ import (
 
 // CreateUnit buat unit
 func CreateUnit(c *fiber.Ctx) error {
-	// Creating new unit using helpers
+	// Membuat unit baru menggunakan helpers
 	return helpers.CreateResource(c, configs.DB, &models.Unit{}, "UNT")
 }
 
 // UpdateUnit update unit
 func UpdateUnit(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// Updating unit using helpers
+	// Memperbarui unit menggunakan helpers
 	return helpers.UpdateResource(c, configs.DB, &models.Unit{}, id)
 }
 
 // DeleteUnit hapus unit
 func DeleteUnit(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// Deleting unit using helpers
+	// Menghapus unit menggunakan helpers
 	return helpers.DeleteResource(c, configs.DB, &models.Unit{}, id)
 }
 
 // GetUnit tampilkan unit berdasarkan id
 func GetUnit(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// Getting unit using helpers
+	// Mengambil unit menggunakan helpers
 	return helpers.GetResource(c, configs.DB, &models.Unit{}, id)
 }
 
@@ -60,26 +60,26 @@ func CmbUnit(c *fiber.Ctx) error {
 	// Get branch id
 	branch_id, _ := services.GetBranchID(c)
 
-	// Parse query parameters for search
+	// Parsing parameter query untuk pencarian
 	search := strings.TrimSpace(c.Query("search"))
 
 	var cmbUnits []models.UnitCombo
 
-	// Base query to get all unit categories
+	// Query dasar untuk mendapatkan semua kategori unit
 	query := configs.DB.Table("units").
 		Select("id as unit_id, name as unit_name").
 		Where("branch_id = ?", branch_id)
 
-	// If search parameter is provided, add a filter
+	// Jika parameter pencarian disediakan, tambahkan filter
 	if search != "" {
-		search = strings.ToLower(search) // Convert search keyword to lowercase
+		search = strings.ToLower(search) // Konversi kata kunci pencarian ke huruf kecil
 		query = query.Where("LOWER(name) LIKE ?", "%"+search+"%")
 	}
 
-	// Add order by name ascending
+	// Tambahkan urutan berdasarkan nama secara ascending
 	query = query.Order("name ASC")
 
-	// Execute the query
+	// Eksekusi query
 	if err := query.Find(&cmbUnits).Error; err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to get data", err.Error())
 	}

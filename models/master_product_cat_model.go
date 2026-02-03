@@ -1,6 +1,6 @@
 package models
 
-// ProductCategory model
+// ProductCategory adalah model untuk kategori produk
 type ProductCategory struct {
 	ID       uint   `gorm:"primaryKey;autoIncrement" json:"id"`
 	Name     string `gorm:"type:varchar(100);not null" json:"name" validate:"required"`

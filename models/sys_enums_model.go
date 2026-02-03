@@ -1,6 +1,6 @@
 package models
 
-// Initialize custom type for ENUM JournalMethod
+// Inisialisasi tipe kustom untuk ENUM JournalMethod
 type JournalMethod string
 
 const (
@@ -8,7 +8,7 @@ const (
 	Automatic JournalMethod = "automatic"
 )
 
-// Initialize custom type for ENUM SubcriptionType
+// Inisialisasi tipe kustom untuk ENUM SubcriptionType
 type SubcriptionType string
 
 const (

@@ -74,14 +74,14 @@ func SetupDB() (err error) {
 	// 	panic("failed to migrate: " + err.Error())
 	// }
 
-	// Connect to database Redis
+	// Koneksi ke database Redis
 	RDB = redis.NewClient(&redis.Options{
 		Addr:     redis_host + ":" + redis_port,
 		Password: redis_pass,
 		DB:       redis_db,
 	})
 
-	// Check connection Redis
+	// Cek koneksi Redis
 	_, err = RDB.Ping(ctx).Result()
 	if err != nil {
 		log.Fatalf("failed to connect to Redis database: %v", err)

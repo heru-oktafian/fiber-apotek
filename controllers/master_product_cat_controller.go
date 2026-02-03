@@ -12,28 +12,28 @@ import (
 
 // CreateProductCategory buat product category
 func CreateProductCategory(c *fiber.Ctx) error {
-	// Creating new ProductCategory using helpers
+	// Membuat ProductCategory baru menggunakan helpers
 	return helpers.CreateResourceInc(c, config.DB, &models.ProductCategory{})
 }
 
 // UpdateProductCategory update ProductCategory
 func UpdateProductCategory(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// Updating ProductCategory using helpers
+	// Memperbarui ProductCategory menggunakan helpers
 	return helpers.UpdateResource(c, config.DB, &models.ProductCategory{}, id)
 }
 
 // DeleteProductCategory hapus ProductCategory
 func DeleteProductCategory(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// Deleting ProductCategory using helpers
+	// Menghapus ProductCategory menggunakan helpers
 	return helpers.DeleteResource(c, config.DB, &models.ProductCategory{}, id)
 }
 
 // GetProductCategory tampilkan ProductCategory berdasarkan id
 func GetProductCategory(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// Getting ProductCategory using helpers
+	// Mengambil ProductCategory menggunakan helpers
 	return helpers.GetResource(c, config.DB, &models.ProductCategory{}, id)
 }
 
@@ -74,7 +74,7 @@ func GetAllProductCategory(c *fiber.Ctx) error {
 	// Get branch id
 	branch_id, _ := services.GetBranchID(c)
 
-	// initialize slice to hold product categories
+	// Inisialisasi slice untuk menampung kategori produk
 	var ProductCategory []models.ComboProductCategory
 
 	// Query dasar

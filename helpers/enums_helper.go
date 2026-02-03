@@ -1,6 +1,6 @@
 package helpers
 
-// Initialize custom type for ENUM JournalMethod
+// Inisialisasi tipe kustom untuk ENUM JournalMethod
 type JournalMethod string
 
 const (
@@ -8,7 +8,7 @@ const (
 	Automatic JournalMethod = "automatic"
 )
 
-// Initialize custom type for ENUM SubcriptionType
+// Inisialisasi tipe kustom untuk ENUM SubcriptionType
 type SubcriptionType string
 
 const (
@@ -18,7 +18,7 @@ const (
 	Year     SubcriptionType = "year"
 )
 
-// Initialize data status in custom type DataStatus
+// Inisialisasi status data dalam tipe kustom DataStatus
 type DataStatus string
 
 const (
@@ -26,7 +26,7 @@ const (
 	Inactive DataStatus = "inactive"
 )
 
-// Initialize custom type for ENUM UserRole
+// Inisialisasi tipe kustom untuk ENUM UserRole
 type UserRole string
 
 const (
@@ -38,7 +38,7 @@ const (
 	Administrator UserRole = "administrator"
 )
 
-// Initialize data status in custom type PaymentStatus
+// Inisialisasi status pembayaran dalam tipe kustom PaymentStatus
 type PaymentStatus string
 
 const (

@@ -7,7 +7,7 @@ type Unit struct {
 	BranchID string `gorm:"type:varchar(15);not null" json:"branch_id" validate:"required"`
 }
 
-// AllUnit model yang akan disimpan ditampilkan
+// AllUnit model yang akan ditampilkan
 type AllUnit struct {
 	UnitID   string `gorm:"type:varchar(15);primaryKey" json:"unit_id" validate:"required"`
 	UnitName string `gorm:"type:varchar(100);not null" json:"unit_name" validate:"required"`

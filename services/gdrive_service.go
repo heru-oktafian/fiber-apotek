@@ -17,7 +17,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-// UploadFileToGoogleDrive uploads the given file to Google Drive
+// UploadFileToGoogleDrive mengunggah file yang diberikan ke Google Drive
 func UploadFileToGoogleDrive(filePath, fileName string) error {
 	folderID := os.Getenv("GDRIVE_FOLDER_ID")
 	ctx := context.Background()
@@ -59,7 +59,7 @@ func UploadFileToGoogleDrive(filePath, fileName string) error {
 	return nil
 }
 
-// Get authenticated HTTP client from credentials.json
+// Dapatkan klien HTTP terautentikasi dari credentials.json
 func getClient(config *oauth2.Config) *http.Client {
 	tokFile := tokenFilePath()
 	tok, err := tokenFromFile(tokFile)

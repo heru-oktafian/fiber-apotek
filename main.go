@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/heru-oktafian/fiber-apotek/configs"
 	"github.com/heru-oktafian/fiber-apotek/helpers"
 	"github.com/heru-oktafian/fiber-apotek/routes"
@@ -19,19 +19,19 @@ import (
 )
 
 func main() {
-	// Init global timezone
+	// Inisialisasi zona waktu global
 	configs.InitTimezone()
 	log.Println("🕒 Sekarang WIB:", time.Now().In(configs.Location))
 
-	// Load .env file
+	// Muat file .env
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	// Get port from environment
+	// Dapatkan port dari environment
 	serverPort := os.Getenv("SERVER_PORT")
 
-	// Initialize database
+	// Inisialisasi database
 	if err := configs.SetupDB(); err != nil {
 		log.Fatal(err)
 	}
@@ -79,20 +79,20 @@ func main() {
 		DisableStartupMessage: true, // ⛔ wajib
 	})
 
-	// Adding logger middleware of fiber
+	// Menambahkan middleware logger fiber
 	app.Use(logger.New())
 
-	// Enable CORS
+	// Aktifkan CORS
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*", // Sesuaikan jika kamu ingin membatasi domain tertentu
 		AllowMethods: "GET,POST,PUT,DELETE",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 	}))
 
-	// Setup routes
+	// Setup rute
 	routes.AuthRoutes(app)
 
-	// Count total routes
+	// Hitung total rute
 	routeCount := 0
 	for _, routes := range app.Stack() {
 		routeCount += len(routes)
@@ -110,6 +110,6 @@ func main() {
 		routeCount, // jumlah handlers
 	)
 
-	// Start Fiber server
+	// Jalankan server Fiber
 	log.Fatal(app.Listen(":" + serverPort))
 }

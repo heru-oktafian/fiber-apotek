@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-// Branch Struct for branch model in database
+// Branch Struct untuk model cabang di database
 type Branch struct {
 	ID               string          `gorm:"type:varchar(15);primaryKey" json:"id" validate:"required"`
 	BranchName       string          `gorm:"unique;not null" json:"branch_name"`
@@ -29,7 +29,7 @@ type Branch struct {
 	Quota            int             `gorm:"type:integer;default:0" json:"quota"`
 }
 
-// SetID is function to set ID into Branch
+// SetID adalah fungsi untuk menetapkan ID ke Branch
 func (b *Branch) SetID(id string) {
 	b.ID = id
 }

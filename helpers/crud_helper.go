@@ -14,7 +14,7 @@ import (
 	gorm "gorm.io/gorm"
 )
 
-// GenerateID is function for generating ID automatically
+// GenerateID adalah fungsi untuk menghasilkan ID secara otomatis
 func GenerateID(prefix string) string {
 	// Pastikan prefix memiliki panjang 3 karakter.
 	// Jika prefix lebih panjang, potong menjadi 3 karakter.
@@ -62,9 +62,9 @@ func GenerateID(prefix string) string {
 	return sb.String() // Kembalikan ID yang sudah jadi
 }
 
-// CreateResourceUser is function for create new resource
+// CreateResourceUser adalah fungsi untuk membuat resource user baru
 func CreateResourceUser(c *fiber.Ctx, db *gorm.DB, model interface{}, generateID func() string) error {
-	// Parsing body request into model
+	// Parsing body request ke model
 	if err := c.BodyParser(model); err != nil {
 		return JSONResponse(c, fiber.StatusBadRequest, "Invalid input", err)
 	}
@@ -83,7 +83,7 @@ func CreateResourceUser(c *fiber.Ctx, db *gorm.DB, model interface{}, generateID
 		}
 	}
 
-	// Save into database
+	// Simpan ke database
 	if err := db.Create(model).Error; err != nil {
 		return JSONResponse(c, fiber.StatusInternalServerError, "Failed to create resource", err)
 	}
@@ -91,7 +91,7 @@ func CreateResourceUser(c *fiber.Ctx, db *gorm.DB, model interface{}, generateID
 	return JSONResponse(c, fiber.StatusOK, "Resource created successfully", model)
 }
 
-// CreateResource is function for create new resource
+// CreateResource adalah fungsi untuk membuat resource baru
 func CreateResource(c *fiber.Ctx, db *gorm.DB, model interface{}, IDCode string) error {
 	if err := c.BodyParser(model); err != nil {
 		return JSONResponse(c, fiber.StatusBadRequest, "Invalid input", err)
@@ -128,9 +128,9 @@ func CreateResource(c *fiber.Ctx, db *gorm.DB, model interface{}, IDCode string)
 	return JSONResponse(c, fiber.StatusOK, "Resource created successfully", model)
 }
 
-// CreateResource is function for create new resource
+// CreateResourceInc adalah fungsi untuk membuat resource baru (incremental)
 func CreateResourceInc(c *fiber.Ctx, db *gorm.DB, model interface{}) error {
-	// Parsing body request into model
+	// Parsing body request ke model
 	if err := c.BodyParser(model); err != nil {
 		return JSONResponse(c, fiber.StatusBadRequest, "Invalid input", err)
 	}
@@ -146,7 +146,7 @@ func CreateResourceInc(c *fiber.Ctx, db *gorm.DB, model interface{}) error {
 		}
 	}
 
-	// Save into database
+	// Simpan ke database
 	if err := db.Create(model).Error; err != nil {
 		return JSONResponse(c, fiber.StatusInternalServerError, "Failed to create resource", err)
 	}
@@ -154,9 +154,9 @@ func CreateResourceInc(c *fiber.Ctx, db *gorm.DB, model interface{}) error {
 	return JSONResponse(c, fiber.StatusOK, "Resource created successfully", model)
 }
 
-// GetResource is function for get resource
+// GetResource adalah fungsi untuk mendapatkan resource
 func GetResource(c *fiber.Ctx, db *gorm.DB, model interface{}, id string) error {
-	// Find resource by ID
+	// Cari resource berdasarkan ID
 	if err := db.Where("id = ?", id).First(model).Error; err != nil {
 		return JSONResponse(c, fiber.StatusNotFound, "Resource not found", err)
 	}
@@ -164,7 +164,7 @@ func GetResource(c *fiber.Ctx, db *gorm.DB, model interface{}, id string) error 
 	return JSONResponse(c, fiber.StatusOK, "Resource found", model)
 }
 
-// UpdateResource is function for update resource
+// UpdateResource adalah fungsi untuk memperbarui resource
 func UpdateResource(c *fiber.Ctx, db *gorm.DB, model interface{}, id string) error {
 	// Cari resource berdasarkan ID
 	if err := db.Where("id = ?", id).First(model).Error; err != nil {
@@ -200,14 +200,14 @@ func UpdateResource(c *fiber.Ctx, db *gorm.DB, model interface{}, id string) err
 	return JSONResponse(c, fiber.StatusOK, "Resource updated successfully", model)
 }
 
-// DeleteResource is function for delete resource
+// DeleteResource adalah fungsi untuk menghapus resource
 func DeleteResource(c *fiber.Ctx, db *gorm.DB, model interface{}, id string) error {
-	// Find resource by ID
+	// Cari resource berdasarkan ID
 	if err := db.Where("id = ?", id).First(model).Error; err != nil {
 		return JSONResponse(c, fiber.StatusNotFound, "Resource not found", err)
 	}
 
-	// Delete resource
+	// Hapus resource
 	if err := db.Delete(model).Error; err != nil {
 		return JSONResponse(c, fiber.StatusInternalServerError, "Failed to delete resource", err)
 	}
@@ -215,12 +215,12 @@ func DeleteResource(c *fiber.Ctx, db *gorm.DB, model interface{}, id string) err
 	return JSONResponse(c, fiber.StatusOK, "Resource deleted successfully", model)
 }
 
-// GetAllResources is function for get all resources
+// GetAllResources adalah fungsi untuk mendapatkan semua resource
 func GetAllResources(c *fiber.Ctx, db *gorm.DB, models interface{}) error {
-	// Get branch id
+	// Dapatkan branch id
 	branchID, _ := services.GetBranchID(c)
 
-	// Find all resources
+	// Cari semua resource
 	if err := db.Where("branch_id = ?", branchID).Find(models).Error; err != nil {
 		return JSONResponse(c, fiber.StatusInternalServerError, "Failed to retrieve resources", err)
 	}
@@ -228,7 +228,7 @@ func GetAllResources(c *fiber.Ctx, db *gorm.DB, models interface{}) error {
 	return JSONResponse(c, fiber.StatusOK, "Resources retrieved successfully", models)
 }
 
-// GetAllBranches is function for get all resources of branches
+// GetAllBranches adalah fungsi untuk mendapatkan semua resource cabang
 func GetAllBranches(c *fiber.Ctx, db *gorm.DB, models interface{}) error {
 	userRole, err := services.GetUserRole(c)
 	if err != nil {
@@ -263,7 +263,7 @@ func GetAllBranches(c *fiber.Ctx, db *gorm.DB, models interface{}) error {
 	return JSONResponse(c, fiber.StatusOK, "Data cabang berhasil diambil", models)
 }
 
-// GetAllUsers is function for get all resources of users
+// GetAllUsers adalah fungsi untuk mendapatkan semua resource pengguna
 func GetAllUsers(c *fiber.Ctx, db *gorm.DB, models interface{}) error {
 	userRole, err := services.GetUserRole(c)
 	if err != nil {

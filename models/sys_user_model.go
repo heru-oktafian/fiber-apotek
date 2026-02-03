@@ -2,7 +2,7 @@ package models
 
 import "golang.org/x/crypto/bcrypt"
 
-// Initialize data status in custom type DataStatus
+// Inisialisasi status data dalam tipe kustom DataStatus
 type DataStatus string
 
 const (
@@ -31,7 +31,7 @@ const (
 // Simrs       UserRole = "simrs"
 // Ipsrs       UserRole = "ipsrs"
 
-// Initialize user model
+// Inisialisasi model pengguna
 type User struct {
 	ID         string     `gorm:"type:varchar(15);primaryKey" json:"id" validate:"required"`
 	Username   string     `gorm:"type:varchar(255);not null;unique" json:"username" validate:"required"`
@@ -41,12 +41,12 @@ type User struct {
 	UserStatus DataStatus `gorm:"type:data_status;not null;default:'inactive'" json:"user_status" validate:"required"`
 }
 
-// SetID is function to set ID into User
+// SetID adalah fungsi untuk menetapkan ID ke User
 func (b *User) SetID(id string) {
 	b.ID = id
 }
 
-// HashPassword is a function to hash password
+// HashPassword adalah fungsi untuk melakukan hash password
 func (u *User) HashPassword() error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {

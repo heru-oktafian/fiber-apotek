@@ -8,43 +8,43 @@ import (
 	services "github.com/heru-oktafian/fiber-apotek/services"
 )
 
-// CreateBranch is function for create new branch
+// CreateBranch adalah fungsi untuk membuat cabang baru
 func CreateBranch(c *fiber.Ctx) error {
-	// Creating new unit using helpers
+	// Membuat cabang baru menggunakan helpers
 	return helpers.CreateResource(c, config.DB, &models.Branch{}, "BRC")
 }
 
-// UpdateBranch is function for update branch
+// UpdateBranch adalah fungsi untuk memperbarui cabang
 func UpdateBranch(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// Updating branch using helpers
+	// Memperbarui cabang menggunakan helpers
 	return helpers.UpdateResource(c, config.DB, &models.Branch{}, id)
 }
 
-// DeleteBranch is function for delete branch
+// DeleteBranch adalah fungsi untuk menghapus cabang
 func DeleteBranch(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// Deleting branch using helpers
+	// Menghapus cabang menggunakan helpers
 	return helpers.DeleteResource(c, config.DB, &models.Branch{}, id)
 }
 
-// GetBranch is function for get branch
+// GetBranch adalah fungsi untuk mendapatkan cabang
 func GetBranch(c *fiber.Ctx) error {
 	id := c.Params("id")
-	// Getting branch using helpers
+	// Mengambil cabang menggunakan helpers
 	return helpers.GetResource(c, config.DB, &models.Branch{}, id)
 }
 
-// GetAllBranch is function for get all branch
+// GetAllBranch adalah fungsi untuk mendapatkan semua cabang
 func GetAllBranch(c *fiber.Ctx) error {
 	var branches []models.Branch
-	// Getting all branches using helpers
+	// Mengambil semua cabang menggunakan helpers
 	return helpers.GetAllBranches(c, config.DB, &branches)
 }
 
 // GetUserBranch menangani penampilan userbranch
 func GetBranchByUserId(c *fiber.Ctx) error {
-	// get user id
+	// dapatkan user id
 	userID, _ := services.GetUserID(c)
 
 	// Menampilkan semua userbranch

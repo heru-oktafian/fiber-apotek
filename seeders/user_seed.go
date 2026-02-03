@@ -12,7 +12,7 @@ func UserSeed() {
 		{ID: "USR250118132203", Username: "zia", Password: "zia123", Name: "Zia", UserRole: "operator", UserStatus: "active"},
 	}
 
-	// Hash password for each user
+	// Hash password untuk setiap user
 	for _, user := range users {
 		if err := user.HashPassword(); err != nil {
 			continue

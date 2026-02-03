@@ -28,14 +28,14 @@ func generateJWT(user models.User) (string, error) {
 	// Hitung waktu sekarang dalam WIB
 	nowWIB := time.Now().In(config.Location)
 
-	// Define JWT claims
+	// Definisikan klaim JWT
 	claims := jwt.MapClaims{
 		"sub": user.ID,
 		"exp": nowWIB.Add(5 * time.Minute).Unix(),
 	}
-	// Generate the token using the claims and a signing key
+	// Buat token menggunakan klaim dan kunci penandatanganan
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	// Replace with your actual signing key (e.g., an environment variable)
+	// Ganti dengan kunci penandatanganan Anda yang sebenarnya (misalnya, variabel environment)
 	secretKey := []byte(os.Getenv("JWT_SECRET"))
 	return token.SignedString(secretKey)
 }
