@@ -2,35 +2,6 @@ package models
 
 import "golang.org/x/crypto/bcrypt"
 
-// Inisialisasi status data dalam tipe kustom DataStatus
-type DataStatus string
-
-const (
-	Active   DataStatus = "active"
-	Inactive DataStatus = "inactive"
-)
-
-type UserRole string
-
-const (
-	Operator      UserRole = "operator"
-	Cashier       UserRole = "cashier"
-	Finance       UserRole = "finance"
-	Umum          UserRole = "umum"
-	Superadmin    UserRole = "superadmin"
-	Administrator UserRole = "administrator"
-)
-
-// Pendaftaran UserRole = "pendaftaran"
-// Rekammedis  UserRole = "rekammedis"
-// Ralan       UserRole = "ralan"
-// Ranap       UserRole = "ranap"
-// Vk          UserRole = "vk"
-// Lab         UserRole = "lab"
-// Klaim       UserRole = "klaim"
-// Simrs       UserRole = "simrs"
-// Ipsrs       UserRole = "ipsrs"
-
 // Inisialisasi model pengguna
 type User struct {
 	ID         string     `gorm:"type:varchar(15);primaryKey" json:"id" validate:"required"`

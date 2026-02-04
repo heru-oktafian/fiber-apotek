@@ -41,6 +41,13 @@ func main() {
 		seeders.UserSeed()
 		seeders.BranchSeed()
 		seeders.UserBranchSeed()
+		seeders.UnitSeed()
+		seeders.UnitConversionSeed()
+		seeders.ProductCategorySeed()
+		seeders.ProductSeed()
+		seeders.MemberCategorySeed()
+		seeders.SupplierCategorySeed()
+		seeders.SupplierSeed()
 		os.Exit(0)
 	}
 
@@ -98,11 +105,13 @@ func main() {
 		routeCount += len(routes)
 	}
 
+	// Konversi port ke integer
 	port, err := strconv.Atoi(serverPort)
 	if err != nil {
 		log.Fatal("Invalid SERVER_PORT: must be a number")
 	}
 
+	// Tampilkan banner Fiber
 	helpers.PrintFiberLikeBanner(
 		os.Getenv("APPNAME"),
 		"0.0.0.0",

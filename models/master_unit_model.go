@@ -25,3 +25,9 @@ type ProductUnitResponseItem struct {
 	UnitName      string `json:"unit_name"`
 	PurchasePrice int    `json:"purchase_price"`
 }
+
+// ComboboxUnits model yang akan ditampilkan di data combobox
+type ComboboxUnits struct {
+	UnitID   string `gorm:"type:varchar(15);primaryKey" json:"unit_id" validate:"required"`
+	UnitName string `gorm:"type:varchar(255);not null" json:"unit_name" validate:"required"`
+}

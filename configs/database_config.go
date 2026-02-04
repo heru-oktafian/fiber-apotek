@@ -19,6 +19,7 @@ var (
 	RDB *redis.Client
 )
 
+// SetupDB menginisialisasi koneksi ke database PostgreSQL dan Redis
 func SetupDB() (err error) {
 
 	ctx := context.Background()
@@ -55,13 +56,19 @@ func SetupDB() (err error) {
 		log.Fatalf("failed to connect to PostgreSQL database: %v", err)
 	}
 
+	// Migrasi tabel-tabel dari model
 	err = DB.AutoMigrate(
 		&models.User{},
 		&models.Branch{},
 		&models.UserBranch{},
 		&models.Unit{},
-		&models.Product{},
 		&models.UnitConversion{},
+		&models.ProductCategory{},
+		&models.Product{},
+		&models.MemberCategory{},
+		&models.Member{},
+		&models.SupplierCategory{},
+		&models.Supplier{},
 	)
 
 	if err != nil {

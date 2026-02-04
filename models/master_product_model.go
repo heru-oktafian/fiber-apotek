@@ -7,6 +7,7 @@ type Product struct {
 	ID                string    `gorm:"type:varchar(15);primaryKey" json:"id" validate:"required"`
 	SKU               string    `gorm:"type:varchar(100);not null" json:"sku" validate:"required"`
 	Name              string    `gorm:"type:varchar(255);not null" json:"name" validate:"required"`
+	Alias             string    `gorm:"type:varchar(255);not null" json:"alias" validate:"required"`
 	Description       string    `gorm:"type:text;" json:"description"`
 	Ingredient        string    `gorm:"type:text;" json:"ingredient"`
 	Dosage            string    `gorm:"type:text;" json:"dosage"`
@@ -26,6 +27,7 @@ type ProductAll struct {
 	ID                  string    `gorm:"type:varchar(15);primaryKey" json:"id" validate:"required"`
 	SKU                 string    `gorm:"type:varchar(100);not null" json:"sku" validate:"required"`
 	Name                string    `gorm:"type:varchar(255);not null" json:"name" validate:"required"`
+	Alias               string    `gorm:"type:varchar(255);not null" json:"alias" validate:"required"`
 	Description         string    `gorm:"type:text;" json:"description"`
 	Ingredient          string    `gorm:"type:text;" json:"ingredient"`
 	Dosage              string    `gorm:"type:text;" json:"dosage"`
@@ -44,6 +46,7 @@ type ProductDetail struct {
 	ID                  string    `gorm:"type:varchar(15);primaryKey" json:"id" validate:"required"`
 	SKU                 string    `gorm:"type:varchar(100);not null" json:"sku" validate:"required"`
 	Name                string    `gorm:"type:varchar(255);not null" json:"name" validate:"required"`
+	Alias               string    `gorm:"type:varchar(255);not null" json:"alias" validate:"required"`
 	Description         string    `gorm:"type:text;" json:"description"`
 	Ingredient          string    `gorm:"type:text;" json:"ingredient"`
 	Dosage              string    `gorm:"type:text;" json:"dosage"`
@@ -81,4 +84,14 @@ type ProdPurchaseCombo struct {
 	Price       int    `json:"price"`
 	UnitId      string `json:"unit_id"`
 	UnitName    string `json:"unit_name"`
+}
+
+// ComboboxProducts adalah model untuk combo box produk
+type ComboboxProducts struct {
+	ProID    string `gorm:"type:varchar(15);primaryKey" json:"pro_id" validate:"required"`
+	ProName  string `gorm:"type:varchar(100);not null" json:"pro_name" validate:"required"`
+	Stock    int    `gorm:"type:int;not null;default:0" json:"stock"`
+	UnitId   string `gorm:"type:varchar(15);not null" json:"unit_id" validate:"required"`
+	UnitName string `gorm:"type:varchar(100);not null" json:"unit_name" validate:"required"`
+	Price    int    `gorm:"type:int;not null;default:0" json:"price" validate:"required"`
 }
