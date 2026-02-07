@@ -17,9 +17,7 @@ func TokenValidation(c *fiber.Ctx, key string) error {
 	// Ambil nilai token dari header Authorization
 	token := c.Get("Authorization")
 	// Hapus awalan "Bearer " jika ada
-	if strings.HasPrefix(token, "Bearer ") {
-		token = token[len("Bearer "):]
-	}
+	token = strings.TrimPrefix(token, "Bearer ")
 
 	// Periksa apakah token kosong
 	if token == "" {

@@ -99,3 +99,32 @@ type OpnameInput struct {
 	TotalOpname int    `gorm:"type:int;not null;default:0" json:"total_opname" validate:"required"`
 	Payment     string `json:"payment"`
 }
+
+// Input struct untuk request body
+type CreateOpnameItemInput struct {
+	OpnameId    string `json:"opname_id" validate:"required"`
+	ProductId   string `json:"product_id" validate:"required"`
+	Qty         int    `json:"qty" validate:"required"`
+	ExpiredDate string `json:"expired_date" validate:"required"`
+}
+
+// Input struct untuk request body
+type CreateOpnameItemUpdate struct {
+	OpnameId    string `json:"opname_id" validate:"required"`
+	ProductId   string `json:"product_id" validate:"required"`
+	Qty         int    `json:"qty" validate:"required"`
+	Price       int    `json:"price" validate:"required"`
+	ExpiredDate string `json:"expired_date" validate:"required"`
+}
+
+// Response menampilkan satu opname beserta semua item-nya
+type ResponseOpnameWithItemsResponse struct {
+	Status      string      `json:"status"`
+	Message     string      `json:"message"`
+	OpnameId    string      `json:"opname_id"`
+	Description string      `json:"description"`
+	OpnameDate  string      `json:"opname_date"`
+	TotalOpname int         `json:"total_opname"`
+	Payment     string      `json:"payment"`
+	Items       interface{} `json:"items"`
+}

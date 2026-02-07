@@ -139,9 +139,7 @@ func SetBranch(c *fiber.Ctx) error {
 	token := c.Get("Authorization")
 
 	// Hapus prefix "Bearer " jika ada
-	if strings.HasPrefix(token, "Bearer ") {
-		token = token[len("Bearer "):]
-	}
+	token = strings.TrimPrefix(token, "Bearer ")
 
 	// Periksa jika token kosong
 	if token == "" {
