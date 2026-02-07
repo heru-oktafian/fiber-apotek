@@ -34,3 +34,6 @@ go.work.sum
 # Python
 *.py
 *.pyc
+
+# Text files
+*.txt

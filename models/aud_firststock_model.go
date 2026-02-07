@@ -33,3 +33,28 @@ type FirstStockInput struct {
 	TotalFirstStock int    `gorm:"type:int;not null;default:0" json:"total_first_stock" validate:"required"`
 	Payment         string `json:"payment"`
 }
+
+// --- Structs Permintaan untuk First Stock ---
+type FirstStockTransactionRequest struct {
+	FirstStock      FirstStockInput       `json:"first_stock" validate:"required"`
+	FirstStockItems []FirstStockItemInput `json:"first_stock_items" validate:"required,min=1,dive"`
+}
+
+// --- Structs Respons untuk First Stock ---
+type FirstStockOutput struct {
+	ID              string `json:"id"`
+	Description     string `json:"description"`
+	FirstStockDate  string `json:"first_stock_date"` // Format YYYY-MM-DD
+	BranchID        string `json:"branch_id"`
+	TotalFirstStock int    `json:"total_first_stock"` // Ini adalah nilai stok yang ditambahkan
+	Payment         string `json:"payment"`           // Akan diisi default "unpaid" atau "no_cost"
+	UserID          string `json:"user_id"`
+	CreatedAt       string `json:"created_at"` // Format YYYY-MM-DD
+	UpdatedAt       string `json:"updated_at"` // Format YYYY-MM-DD
+}
+
+// Struct untuk respons FirstStockTransaction
+type FirstStockTransactionResponse struct {
+	FirstStock      FirstStockOutput         `json:"first_stock"`
+	FirstStockItems []FirstStockItemResponse `json:"first_stock_items"`
+}

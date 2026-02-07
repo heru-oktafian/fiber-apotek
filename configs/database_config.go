@@ -69,6 +69,23 @@ func SetupDB() (err error) {
 		&models.Member{},
 		&models.SupplierCategory{},
 		&models.Supplier{},
+		&models.Sales{},
+		&models.SaleItems{},
+		&models.SaleReturns{},
+		&models.SaleReturnItems{},
+		&models.Purchases{},
+		&models.PurchaseItems{},
+		&models.BuyReturns{},
+		&models.BuyReturnItems{},
+		&models.FirstStocks{},
+		&models.FirstStockItems{},
+		&models.Opnames{},
+		&models.OpnameItems{},
+		&models.Expenses{},
+		&models.AnotherIncomes{},
+		&models.TransactionReports{},
+		&models.DailyProfitReport{},
+		&models.DailyAsset{},
 	)
 
 	if err != nil {

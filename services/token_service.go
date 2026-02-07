@@ -46,12 +46,9 @@ func GetClaimsToken(c *fiber.Ctx, key string) (string, error) {
 	authHeader := c.Get("Authorization")
 	// fmt.Println("Authorization Header:", authHeader)
 
-	// Hapus awalan "Bearer " jika ada
 	token := authHeader
-	// Remove prefix "Bearer " if exist
-	if strings.HasPrefix(token, "Bearer ") {
-		token = token[len("Bearer "):]
-	}
+	// Hapus prefix "Bearer " jika ada
+	token = strings.TrimPrefix(token, "Bearer ")
 	// fmt.Println("Stripped Token:", token)
 
 	// Periksa apakah token kosong
