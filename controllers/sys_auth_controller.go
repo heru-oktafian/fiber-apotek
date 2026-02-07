@@ -120,9 +120,7 @@ func Logout(c *fiber.Ctx) error {
 	token := c.Get("Authorization")
 
 	// Remove prefix "Bearer " jika ada
-	if strings.HasPrefix(token, "Bearer ") {
-		token = token[len("Bearer "):]
-	}
+	token = strings.TrimPrefix(token, "Bearer ")
 
 	if token == "" {
 		return helpers.JSONResponse(c, fiber.StatusUnauthorized, "Missing token", "Insert valid token to access this endpoint !")
