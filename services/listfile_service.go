@@ -1,10 +1,10 @@
 package services
 
 import (
-	"fmt"
-	"os"
-	"sort"
-	"time"
+	fmt "fmt"
+	os "os"
+	sort "sort"
+	time "time"
 )
 
 // FileInfo adalah struct untuk menyimpan informasi file

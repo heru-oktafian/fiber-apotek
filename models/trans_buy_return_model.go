@@ -1,8 +1,6 @@
 package models
 
-import (
-	"time"
-)
+import time "time"
 
 // BuyReturns model
 type BuyReturns struct {

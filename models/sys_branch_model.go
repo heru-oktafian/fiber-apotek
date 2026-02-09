@@ -1,6 +1,6 @@
 package models
 
-import "time"
+import time "time"
 
 // Branch Struct untuk model cabang di database
 type Branch struct {

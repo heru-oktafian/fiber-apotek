@@ -1,6 +1,6 @@
 package models
 
-import "time"
+import time "time"
 
 // Opnames model merepresentasikan tabel opnames
 type Opnames struct {

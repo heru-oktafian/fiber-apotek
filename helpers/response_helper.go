@@ -1,8 +1,8 @@
 package helpers
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/heru-oktafian/fiber-apotek/models"
+	fiber "github.com/gofiber/fiber/v2"
+	models "github.com/heru-oktafian/fiber-apotek/models"
 )
 
 // getStatusText mengembalikan "success" atau "error" berdasarkan kode status HTTP

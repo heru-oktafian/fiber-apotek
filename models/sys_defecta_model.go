@@ -1,6 +1,6 @@
 package models
 
-import "time"
+import time "time"
 
 // Defectas model merepresentasikan tabel defectas
 type Defectas struct {

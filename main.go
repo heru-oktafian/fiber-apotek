@@ -1,21 +1,21 @@
 package main
 
 import (
-	"log"
-	"os"
-	"strconv"
-	"time"
+	log "log"
+	os "os"
+	strconv "strconv"
+	time "time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/heru-oktafian/fiber-apotek/configs"
-	"github.com/heru-oktafian/fiber-apotek/helpers"
-	"github.com/heru-oktafian/fiber-apotek/routes"
-	"github.com/heru-oktafian/fiber-apotek/seeders"
-	"github.com/heru-oktafian/fiber-apotek/services"
-	"github.com/joho/godotenv"
-	"github.com/robfig/cron/v3"
+	fiber "github.com/gofiber/fiber/v2"
+	cors "github.com/gofiber/fiber/v2/middleware/cors"
+	logger "github.com/gofiber/fiber/v2/middleware/logger"
+	configs "github.com/heru-oktafian/fiber-apotek/configs"
+	helpers "github.com/heru-oktafian/fiber-apotek/helpers"
+	routes "github.com/heru-oktafian/fiber-apotek/routes"
+	seeders "github.com/heru-oktafian/fiber-apotek/seeders"
+	services "github.com/heru-oktafian/fiber-apotek/services"
+	godotenv "github.com/joho/godotenv"
+	cron "github.com/robfig/cron/v3"
 )
 
 func main() {
@@ -98,6 +98,8 @@ func main() {
 
 	// Setup rute
 	routes.AuthRoutes(app)
+	routes.SysBranchRoutes(app)
+	routes.AudFirstStockRoutes(app)
 
 	// Hitung total rute
 	routeCount := 0

@@ -1,16 +1,16 @@
 package services
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"os"
-	"strconv"
-	"strings"
-	"time"
+	context "context"
+	json "encoding/json"
+	fmt "fmt"
+	os "os"
+	strconv "strconv"
+	strings "strings"
+	time "time"
 
-	"github.com/heru-oktafian/fiber-apotek/models"
-	"github.com/redis/go-redis/v9"
+	models "github.com/heru-oktafian/fiber-apotek/models"
+	redis "github.com/redis/go-redis/v9"
 )
 
 // Inisialisasi RedisClient ini adalah instance dari redis client yang akan digunnakan sebagai media pemrosesan data di fungsi-fungsi yang membutuhkan redis
@@ -99,6 +99,30 @@ func DeleteTemporaryProductCache(cacheKey string) error {
 	ctx := context.Background()
 	key := fmt.Sprintf("tmp:products:sale:%s", cacheKey)
 	return RedisClient.Del(ctx, key).Err()
+}
+
+// SetTemporaryPurchaseProductCache menyimpan daftar produk sementara untuk pembelian ke Redis dengan cacheKey sebagai pembeda
+func SetTemporaryPurchaseProductCache(cacheKey string, products []models.ProdPurchaseCombo) error {
+	ctx := context.Background()
+
+	// Ping Redis to check connection
+	if _, err := RedisClient.Ping(ctx).Result(); err != nil {
+		fmt.Printf("Redis ping failed: %v\n", err)
+		return err
+	}
+
+	key := fmt.Sprintf("tmp:products:purchase:%s", cacheKey)
+	data, err := json.Marshal(products)
+	if err != nil {
+		return err
+	}
+
+	// Set dengan TTL 30 menit
+	err = RedisClient.Set(ctx, key, data, 30*time.Minute).Err()
+	if err == nil {
+		fmt.Printf("Successfully saved product cache to Redis key: %s\n", key)
+	}
+	return err
 }
 
 // GetTemporaryPurchaseProductCache mengambil daftar produk pembelian sementara dari Redis berdasarkan cacheKey

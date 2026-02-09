@@ -1,6 +1,6 @@
 package models
 
-import "time"
+import time "time"
 
 // Another Incomes model merepresentasikan tabel another_incomes
 type AnotherIncomes struct {

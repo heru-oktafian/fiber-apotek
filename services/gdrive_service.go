@@ -1,20 +1,20 @@
 package services
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
-	"os/user"
-	"path/filepath"
+	context "context"
+	json "encoding/json"
+	fmt "fmt"
+	ioutil "io/ioutil"
+	log "log"
+	http "net/http"
+	os "os"
+	user "os/user"
+	filepath "path/filepath"
 
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/drive/v3"
-	"google.golang.org/api/option"
+	oauth2 "golang.org/x/oauth2"
+	google "golang.org/x/oauth2/google"
+	drive "google.golang.org/api/drive/v3"
+	option "google.golang.org/api/option"
 )
 
 // UploadFileToGoogleDrive mengunggah file yang diberikan ke Google Drive

@@ -1,6 +1,6 @@
 package models
 
-import "time"
+import time "time"
 
 // Struktur untuk menampung hasil query mentah dari database
 type DailySummaryDB struct {

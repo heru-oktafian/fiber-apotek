@@ -1,6 +1,6 @@
 package models
 
-import "time"
+import time "time"
 
 // FirstStock Items model
 type FirstStockItems struct {
@@ -26,11 +26,12 @@ type AllFirstStockItems struct {
 }
 
 // Struct untuk input FirstStockItem
+// Struct untuk input FirstStockItem
 type FirstStockItemInput struct {
-	ProductId   string `json:"product_id" validate:"required"`
-	UnitId      string `json:"unit_id" validate:"required"`
-	Qty         int    `json:"qty" validate:"required,min=1"`
-	ExpiredDate string `json:"expired_date" validate:"required"` // String untuk parsing dari request
+	ProductId   string `json:"product_id"`
+	UnitId      string `json:"unit_id"`
+	Qty         int    `json:"qty"`
+	ExpiredDate string `json:"expired_date"`
 }
 
 // Struct untuk respons FirstStockItem

@@ -1,11 +1,11 @@
 package services
 
 import (
-	"fmt"
-	"log"
-	"os"
-	"os/exec"
-	"path/filepath"
+	fmt "fmt"
+	log "log"
+	os "os"
+	exec "os/exec"
+	filepath "path/filepath"
 )
 
 // RestoreDatabaseFromFile me-restore database dari file .sql yang ada di folder rest/

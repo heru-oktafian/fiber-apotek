@@ -1,12 +1,12 @@
 package services
 
 import (
-	"fmt"
-	"log"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"time"
+	fmt "fmt"
+	log "log"
+	os "os"
+	exec "os/exec"
+	filepath "path/filepath"
+	time "time"
 )
 
 func DumpDatabaseToFile() error {

@@ -1,6 +1,6 @@
 package models
 
-import "time"
+import time "time"
 
 // SysDaylyAsset model merepresentasikan tabel daily_asset
 type DailyAsset struct {

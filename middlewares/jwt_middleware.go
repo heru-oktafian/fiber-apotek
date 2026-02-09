@@ -10,16 +10,12 @@ import (
 )
 
 func JWTMiddleware(c *fiber.Ctx) error {
-	helpers.TokenValidation(c, "sub")
-
-	// Lanjutkan ke handler berikutnya
-	return nil
+	return helpers.TokenValidation(c, "sub")
 }
 
 func RoleMiddleware(allowedRoles ...models.UserRole) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		userRole, _ := services.GetUserRole(c)
-		// fmt.Println("user_role:", userRole)
 		userRole = strings.ToLower(userRole)
 
 		for _, role := range allowedRoles {

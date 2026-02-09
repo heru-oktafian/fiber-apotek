@@ -1,11 +1,11 @@
 package helpers
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"os"
-	"strings"
+	context "context"
+	fmt "fmt"
+	log "log"
+	os "os"
+	strings "strings"
 
 	fiber "github.com/gofiber/fiber/v2"
 	jwt "github.com/golang-jwt/jwt/v5"

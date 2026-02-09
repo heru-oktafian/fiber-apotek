@@ -1,8 +1,6 @@
 package models
 
-import (
-	"time"
-)
+import time "time"
 
 // FirstStocks model
 type FirstStocks struct {
@@ -28,16 +26,17 @@ type AllFirstStocks struct {
 
 // FirstStockInput is the input struct for creating or updating a first stock
 type FirstStockInput struct {
-	FirstStockDate  string `json:"first_stock_date" validate:"required"`
-	Description     string `gorm:"type:text;" json:"description"`
-	TotalFirstStock int    `gorm:"type:int;not null;default:0" json:"total_first_stock" validate:"required"`
+	FirstStockDate  string `json:"first_stock_date"`
+	Description     string `json:"description"`
+	TotalFirstStock int    `json:"total_first_stock"`
 	Payment         string `json:"payment"`
 }
 
 // --- Structs Permintaan untuk First Stock ---
+// --- Structs Permintaan untuk First Stock ---
 type FirstStockTransactionRequest struct {
-	FirstStock      FirstStockInput       `json:"first_stock" validate:"required"`
-	FirstStockItems []FirstStockItemInput `json:"first_stock_items" validate:"required,min=1,dive"`
+	FirstStock      FirstStockInput       `json:"first_stock"`
+	FirstStockItems []FirstStockItemInput `json:"first_stock_items"`
 }
 
 // --- Structs Respons untuk First Stock ---

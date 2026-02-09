@@ -7,7 +7,7 @@ import (
 	config "github.com/heru-oktafian/fiber-apotek/configs"
 	helpers "github.com/heru-oktafian/fiber-apotek/helpers"
 	models "github.com/heru-oktafian/fiber-apotek/models"
-	"github.com/heru-oktafian/fiber-apotek/services"
+	services "github.com/heru-oktafian/fiber-apotek/services"
 )
 
 // CreateProductCategory buat product category

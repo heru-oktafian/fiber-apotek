@@ -1,6 +1,6 @@
 package models
 
-import "time"
+import time "time"
 
 // Purchase Items model
 type PurchaseItems struct {

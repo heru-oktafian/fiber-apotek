@@ -1,6 +1,6 @@
 package models
 
-import "golang.org/x/crypto/bcrypt"
+import bcrypt "golang.org/x/crypto/bcrypt"
 
 // Inisialisasi model pengguna
 type User struct {

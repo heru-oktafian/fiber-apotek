@@ -1,20 +1,28 @@
 package helpers
 
 import (
-	"math"
-	"strings"
+	math "math"
+	strings "strings"
 
 	fiber "github.com/gofiber/fiber/v2"
 	models "github.com/heru-oktafian/fiber-apotek/models"
-	"gorm.io/gorm"
+	gorm "gorm.io/gorm"
 )
 
 // Paginate adalah helper untuk menangani pagination dan search pada query
 func Paginate(c *fiber.Ctx, query *gorm.DB, model interface{}, searchFields []string) (interface{}, string, int, int, int, int, error) {
 	// Parsing body JSON ke struct
 	var body models.RequestBody
-	if err := c.BodyParser(&body); err != nil {
-		return nil, "", 0, 0, 0, 0, err
+
+	// Cek metode request
+	if c.Method() == fiber.MethodGet {
+		if err := c.QueryParser(&body); err != nil {
+			return nil, "", 0, 0, 0, 0, err
+		}
+	} else {
+		if err := c.BodyParser(&body); err != nil {
+			return nil, "", 0, 0, 0, 0, err
+		}
 	}
 
 	// Validasi dan set default untuk page jika tidak valid
@@ -36,7 +44,7 @@ func Paginate(c *fiber.Ctx, query *gorm.DB, model interface{}, searchFields []st
 				if whereClause != "" {
 					whereClause += " OR "
 				}
-				whereClause += "LOWER(" + field + ") LIKE ?"
+				whereClause += "LOWER(" + field + ") ILIKE ?"
 				args[i] = "%" + search + "%"
 			}
 			query = query.Where(whereClause, args...)

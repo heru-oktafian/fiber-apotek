@@ -1,6 +1,6 @@
 package models
 
-import "time"
+import time "time"
 
 // Product model yang akan disimpan di database
 type Product struct {

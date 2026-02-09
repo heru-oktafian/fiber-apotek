@@ -1,6 +1,6 @@
 package models
 
-import "time"
+import time "time"
 
 // DuplicateReceipts represents a record for duplicate receipts in the system.
 type DuplicateReceipts struct {

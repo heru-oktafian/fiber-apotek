@@ -1,8 +1,8 @@
 package configs
 
 import (
-	"log"
-	"time"
+	log "log"
+	time "time"
 )
 
 var Location *time.Location

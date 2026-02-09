@@ -1,13 +1,13 @@
 package routes
 
 import (
-	"os"
+	os "os"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/heru-oktafian/fiber-apotek/controllers"
-	"github.com/heru-oktafian/fiber-apotek/helpers"
-	"github.com/heru-oktafian/fiber-apotek/middlewares"
-	"github.com/heru-oktafian/fiber-apotek/services"
+	fiber "github.com/gofiber/fiber/v2"
+	controllers "github.com/heru-oktafian/fiber-apotek/controllers"
+	helpers "github.com/heru-oktafian/fiber-apotek/helpers"
+	middlewares "github.com/heru-oktafian/fiber-apotek/middlewares"
+	services "github.com/heru-oktafian/fiber-apotek/services"
 )
 
 func AuthRoutes(app *fiber.App) {
@@ -42,13 +42,11 @@ func AuthRoutes(app *fiber.App) {
 	// Endpoint Otentikasi
 	app.Post("/api/login", controllers.Login)
 	app.Post("/api/logout", controllers.Logout)
-	// app.Post("/register", controllers.CreateUser)
 	app.Get("/api/profile", middlewares.JWTMiddleware, controllers.GetProfile)
 	app.Get("/api/list_branches", middlewares.JWTMiddleware, controllers.GetBranchByUserId)
 
 	// Endpoint SetBranch
 	app.Post("/api/set_branch", controllers.SetBranch)
-	// api := app.Group("/api", middlewares.JWTMiddleware)
 
 	// Endpoint untuk menghasilkan file .env
 	app.Post("/api/update-env", middlewares.JWTMiddleware, middlewares.RoleMiddleware("superadmin", "administrator"), func(c *fiber.Ctx) error {

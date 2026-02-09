@@ -1,13 +1,13 @@
 package seeders
 
 import (
-	"fmt"
-	"log"
+	fmt "fmt"
+	log "log"
 	time "time"
 
 	config "github.com/heru-oktafian/fiber-apotek/configs"
 	models "github.com/heru-oktafian/fiber-apotek/models"
-	"gorm.io/gorm/clause"
+	clause "gorm.io/gorm/clause"
 )
 
 // ProductSeed ini adalah data produk yang akan di seed ke database

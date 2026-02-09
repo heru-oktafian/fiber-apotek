@@ -1,11 +1,11 @@
 package services
 
 import (
-	"errors"
-	"fmt"
+	errors "errors"
+	fmt "fmt"
 
-	"github.com/heru-oktafian/fiber-apotek/models"
-	"gorm.io/gorm"
+	models "github.com/heru-oktafian/fiber-apotek/models"
+	gorm "gorm.io/gorm"
 )
 
 // Tambah stock product

@@ -1,6 +1,6 @@
 package models
 
-import "time"
+import time "time"
 
 // TransactionReports model merepresentasikan tabel transaction_reports
 type TransactionReports struct {

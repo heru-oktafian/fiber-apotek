@@ -1,8 +1,8 @@
 package helpers
 
 import (
-	"fmt"
-	"os"
+	fmt "fmt"
+	os "os"
 )
 
 func PrintFiberLikeBanner(vApp, vHost string, vPort int, handlers int) {

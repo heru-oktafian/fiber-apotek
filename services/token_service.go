@@ -1,9 +1,9 @@
 package services
 
 import (
-	"fmt"
-	"os"
-	"strings"
+	fmt "fmt"
+	os "os"
+	strings "strings"
 
 	fiber "github.com/gofiber/fiber/v2"
 	jwt "github.com/golang-jwt/jwt/v5"

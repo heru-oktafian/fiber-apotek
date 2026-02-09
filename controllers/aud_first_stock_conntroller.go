@@ -1,11 +1,9 @@
 package controllers
 
 import (
-	"errors"
-	"fmt"
-	"math"
-	"net/http"
-	strconv "strconv"
+	errors "errors"
+	fmt "fmt"
+	http "net/http"
 	strings "strings"
 	time "time"
 
@@ -40,7 +38,7 @@ func CreateFirstStock(c *fiber.Ctx) error {
 	layout := "2006-01-02" // format harus YYYY-MM-DD
 	parsedDate, err := time.Parse(layout, input.FirstStockDate)
 	if err != nil {
-		return helpers.JSONResponse(c, http.StatusBadRequest, "Invalid date format. Use YYYY-MM-DD", err)
+		return helpers.JSONResponse(c, http.StatusBadRequest, "Invalid date format. Use YYYY-MM-DD", err.Error())
 	}
 
 	// Map ke struct model
@@ -399,21 +397,8 @@ func GetAllFirstStocks(c *fiber.Ctx) error {
 	// Get branch id
 	branch_id, _ := services.GetBranchID(c)
 
-	// Ambil parameter page dan search dari query URL
-	pageParam := c.Query("page")
-	search := strings.TrimSpace(c.Query("search"))
-
-	// Konversi page ke int, default ke 1 jika tidak valid
-	page := 1
-	if p, err := strconv.Atoi(pageParam); err == nil && p > 0 {
-		page = p
-	}
-
-	limit := 10 // Tetapkan limit ke 10 data per halaman
-	offset := (page - 1) * limit
-
 	var FirstStocks []models.AllFirstStocks
-	var total int64
+	var total int
 
 	// Query dasar
 	query := configs.DB.Table("first_stocks pur").
@@ -421,26 +406,12 @@ func GetAllFirstStocks(c *fiber.Ctx) error {
 		Where("pur.branch_id = ?", branch_id).
 		Order("pur.created_at DESC")
 
-	// Jika ada search key, tambahkan filter WHERE
-	if search != "" {
-		search = strings.ToLower(search) // Konversi search ke lowercase
-		query = query.Where("LOWER(pur.description) LIKE ?", "%"+search+"%")
+	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &FirstStocks, []string{"pur.description"})
+	if err != nil {
+		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Get FirstStocks failed", err.Error())
 	}
 
-	// Hitung total first_stock yang sesuai dengan filter
-	if err := query.Count(&total).Error; err != nil {
-		return helpers.JSONResponse(c, http.StatusInternalServerError, "Failed to get FirstStock", err)
-	}
-
-	// Ambil data dengan pagination
-	if err := query.Offset(offset).Limit(limit).Scan(&FirstStocks).Error; err != nil {
-		return helpers.JSONResponse(c, http.StatusInternalServerError, "Failed to get first_stocks", err)
-	}
-
-	// Hitung total halaman berdasarkan hasil filter
-	totalPages := int(math.Ceil(float64(total) / float64(limit)))
-
-	return helpers.JSONResponseGetAll(c, http.StatusOK, "FirstStocks retrieved successfully", search, int(total), page, int(totalPages), int(limit), FirstStocks)
+	return helpers.JSONResponseGetAll(c, fiber.StatusOK, "FirstStocks retrieved successfully", search, int(total), page, int(totalPages), int(limit), FirstStocks)
 }
 
 // GetAllFirstStockItems tampilkan semua item berdasarkan first_stock_id tanpa pagination
@@ -554,9 +525,17 @@ func CreateFirstStockTransaction(c *fiber.Ctx) error {
 		if err = helpers.ValidateStruct(item); err != nil {
 			return helpers.JSONResponse(c, http.StatusBadRequest, "Validation failed for one or more first stock items", err)
 		}
+		// Validasi manual tambahan karena tag required di-relax
+		if item.ProductId == "" || item.UnitId == "" {
+			return helpers.JSONResponse(c, http.StatusBadRequest, "product_id and unit_id are required for all items", nil)
+		}
+		if item.Qty <= 0 {
+			return helpers.JSONResponse(c, http.StatusBadRequest, "qty must be greater than 0", nil)
+		}
 	}
 	// --- AKHIR VALIDASI INPUT ---
 
+	// Parse FirstStockDate
 	// Parse FirstStockDate
 	var parsedFirstStockDate time.Time
 	if req.FirstStock.FirstStockDate == "" {
@@ -564,7 +543,7 @@ func CreateFirstStockTransaction(c *fiber.Ctx) error {
 	} else {
 		parsedFirstStockDate, err = time.Parse("2006-01-02", req.FirstStock.FirstStockDate)
 		if err != nil {
-			return helpers.JSONResponse(c, http.StatusBadRequest, "Invalid first_stock_date format. Please use `YYYY-MM-DD`.", err)
+			return helpers.JSONResponse(c, http.StatusBadRequest, "Invalid first_stock_date format. Please use `YYYY-MM-DD`.", err.Error())
 		}
 	}
 
