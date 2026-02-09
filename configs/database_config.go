@@ -99,6 +99,10 @@ func SetupDB() (err error) {
 	// }
 
 	// Koneksi ke database Redis
+	if redis_host == "" || redis_port == "" {
+		log.Fatalf("❌ REDIS_HOST or REDIS_PORT is not set in .env")
+	}
+
 	RDB = redis.NewClient(&redis.Options{
 		Addr:     redis_host + ":" + redis_port,
 		Password: redis_pass,

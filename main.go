@@ -19,14 +19,14 @@ import (
 )
 
 func main() {
-	// Inisialisasi zona waktu global
-	configs.InitTimezone()
-	log.Println("🕒 Sekarang WIB:", time.Now().In(configs.Location))
-
 	// Muat file .env
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	// Inisialisasi zona waktu global
+	configs.InitTimezone()
+	log.Println("🕒 Sekarang WIB:", time.Now().In(configs.Location))
 
 	// Dapatkan port dari environment
 	serverPort := os.Getenv("SERVER_PORT")
