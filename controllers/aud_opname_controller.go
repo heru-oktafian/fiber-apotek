@@ -16,6 +16,37 @@ import (
 	gorm "gorm.io/gorm"
 )
 
+// Get Mobile Opnames menampilkan semua opname yang disajikan untuk pengguna mobile
+func GetAllMobileOpnames(c *fiber.Ctx) error {
+	branchID, _ := services.GetBranchID(c)
+	var rawOpnames []models.OpnameQueryResult // Gunakan struct untuk menampung hasil query mentah
+
+	// Query dasar (opname_date tanpa TO_CHAR di SQL)
+	query := configs.DB.Table("opnames pur").
+		Select("pur.id, pur.description, pur.opname_date, 'Rp. ' || TO_CHAR(pur.total_opname, 'FM999G999G999') AS total_opname").
+		Where("pur.branch_id = ?", branchID).
+		Order("pur.created_at DESC")
+
+	if err := query.Scan(&rawOpnames).Error; err != nil {
+		return helpers.JSONResponse(c, http.StatusInternalServerError, "Pengambilan opnames gagal", "Gagal mengambil data Opname")
+	}
+
+	// Inisialisasi slice untuk hasil akhir yang diformat
+	var formattedOpnames []models.AllOpnameMobiles
+
+	// Iterasi hasil query mentah dan format opname_date
+	for _, op := range rawOpnames {
+		formattedOpnames = append(formattedOpnames, models.AllOpnameMobiles{
+			ID:          op.ID,
+			Description: op.Description,
+			OpnameDate:  helpers.FormatIndonesianDate(op.OpnameDate),
+			TotalOpname: op.TotalOpname,
+		})
+	}
+
+	return helpers.JSONResponse(c, http.StatusOK, "Data opname berhasil diambil", formattedOpnames)
+}
+
 // Get Mobile Opnames Actives menampilkan semua opname yang disajikan untuk pengguna mobile dengan status aktif
 func GetAllActiveMobileOpnames(c *fiber.Ctx) error {
 	branchID, _ := services.GetBranchID(c)

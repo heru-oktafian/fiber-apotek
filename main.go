@@ -100,6 +100,8 @@ func main() {
 	routes.AuthRoutes(app)
 	routes.SysBranchRoutes(app)
 	routes.AudFirstStockRoutes(app)
+	routes.MasterProductCatRoute(app)
+	routes.SysBranchRoutes(app)
 
 	// Hitung total rute
 	routeCount := 0
