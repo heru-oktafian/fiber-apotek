@@ -2,6 +2,7 @@ package controllers
 
 import (
 	fmt "fmt"
+	strings "strings"
 
 	fiber "github.com/gofiber/fiber/v2"
 	configs "github.com/heru-oktafian/fiber-apotek/configs"
@@ -130,4 +131,78 @@ func CreateUnitConversion(c *fiber.Ctx) error {
 		"value_conv":      unitConversion.ValueConv,
 		"branch_id":       unitConversion.BranchID,
 	})
+}
+
+// UpdateUnit update unit
+func UpdateUnitConversion(c *fiber.Ctx) error {
+	id := c.Params("id")
+	// Updating unit using helpers
+	return helpers.UpdateResource(c, configs.DB, &models.UnitConversion{}, id)
+}
+
+// DeleteUnit hapus unit
+func DeleteUnitConversion(c *fiber.Ctx) error {
+	id := c.Params("id")
+	// Deleting unit using helpers
+	return helpers.DeleteResource(c, configs.DB, &models.UnitConversion{}, id)
+}
+
+// GetUnitConversionByID tampilkan unit berdasarkan id
+func GetUnitConversionByID(c *fiber.Ctx) error {
+	id := c.Params("id")
+	// Getting unit using helpers
+	return helpers.GetResource(c, configs.DB, &models.UnitConversion{}, id)
+}
+
+// GetAllUnit tampilkan semua unit
+func GetAllUnitConversion(c *fiber.Ctx) error {
+	// Ambil ID cabang
+	branch_id, _ := services.GetBranchID(c)
+
+	var unit_conversions []models.UnitConversionDetail
+
+	// Query dasar
+	query := configs.DB.Table("unit_conversions unc").
+		Select("unc.id, pro.name AS product_name, uin.name AS init_name, ufi.name AS final_name, unc.value_conv, unc.product_id, unc.init_id, unc.final_id, unc.branch_id").
+		Joins("LEFT JOIN products pro on pro.id = unc.product_id").
+		Joins("LEFT JOIN units uin on uin.id = unc.init_id").
+		Joins("LEFT JOIN units ufi on ufi.id = unc.final_id").
+		Where("unc.branch_id = ?", branch_id)
+
+	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &unit_conversions, []string{"pro.name", "uin.name", "ufi.name"})
+	if err != nil {
+		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Get Unit Conversions failed", err.Error())
+	}
+
+	// Return response
+	return helpers.JSONResponseGetAll(c, fiber.StatusOK, "Unit conversions retrieved successfully", search, int(total), page, int(totalPages), int(limit), unit_conversions)
+
+}
+
+// CmbProdConv mendapatkan semua produk
+func CmbProdConv(c *fiber.Ctx) error {
+	// Get branch id
+	branch_id, _ := services.GetBranchID(c)
+
+	// Parsing query parameter "search"
+	search := strings.TrimSpace(c.Query("search"))
+
+	var cmbProducts []models.ProdConvCombo
+
+	// Query untuk mendapatkan semua produk
+	query := configs.DB.Table("products").
+		Select("id as product_id, name as product_name").
+		Where("branch_id = ?", branch_id)
+
+	// Jika ada parameter search, tambahkan filter WHERE
+	if search != "" {
+		search = strings.ToLower(search) // Konversi search ke lowercase
+		query = query.Where("LOWER(name) LIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Find(&cmbProducts).Error; err != nil {
+		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to get data", "Failed to get data")
+	}
+
+	return helpers.JSONResponse(c, fiber.StatusOK, "Data berhasil ditemukan", cmbProducts)
 }
