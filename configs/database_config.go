@@ -17,12 +17,11 @@ import (
 var (
 	DB  *gorm.DB
 	RDB *redis.Client
+	Ctx = context.Background()
 )
 
 // SetupDB menginisialisasi koneksi ke database PostgreSQL dan Redis
 func SetupDB() (err error) {
-
-	ctx := context.Background()
 
 	db_host := os.Getenv("DB_HOST")
 	db_port := os.Getenv("DB_PORT")
@@ -110,7 +109,7 @@ func SetupDB() (err error) {
 	})
 
 	// Cek koneksi Redis
-	_, err = RDB.Ping(ctx).Result()
+	_, err = RDB.Ping(Ctx).Result()
 	if err != nil {
 		log.Fatalf("failed to connect to Redis database: %v", err)
 	}

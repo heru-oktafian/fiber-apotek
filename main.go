@@ -113,6 +113,7 @@ func main() {
 	routes.SysMemberCatRoute(app)
 	routes.SysMemberRoute(app)
 	routes.SysReportRoute(app)
+	routes.SysUserRoute(app)
 
 	// Hitung total rute
 	routeCount := 0
