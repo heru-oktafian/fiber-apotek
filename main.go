@@ -112,6 +112,7 @@ func main() {
 	routes.SysDefectaRoute(app)
 	routes.SysMemberCatRoute(app)
 	routes.SysMemberRoute(app)
+	routes.SysReportRoute(app)
 
 	// Hitung total rute
 	routeCount := 0
