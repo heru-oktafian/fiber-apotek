@@ -3,6 +3,7 @@ package services
 import (
 	errors "errors"
 	fmt "fmt"
+	time "time"
 
 	models "github.com/heru-oktafian/fiber-apotek/models"
 	gorm "gorm.io/gorm"
@@ -97,4 +98,22 @@ func ZeroProductStockAsync(db *gorm.DB, productID string, qty int) {
 			fmt.Printf("Failed to zero product stock asynchronously: %v\n", err)
 		}
 	}()
+}
+
+// IsEditable memeriksa apakah sebuah record masih bisa diedit
+func IsEditable(db *gorm.DB, tableName string, recordID string, times time.Duration) (bool, error) {
+	var createdAt time.Time
+	err := db.Table(tableName).
+		Select("created_at").
+		Where("id = ?", recordID).
+		Scan(&createdAt).Error
+	if err != nil {
+		return false, err
+	}
+
+	if time.Since(createdAt) >= times {
+		return false, nil
+	}
+
+	return true, nil
 }

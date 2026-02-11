@@ -102,11 +102,16 @@ func main() {
 	routes.AudFirstStockRoutes(app)
 	routes.MasterProductCatRoute(app)
 	routes.MasterProductRoute(app)
-	routes.SysBranchRoutes(app)
 	routes.SysSupplierCatRoute(app)
 	routes.MasterSupplierRoute(app)
 	routes.MasterUnitRoutes(app)
 	routes.MasterUnitConvRoutes(app)
+	routes.SysDashboardRoute(app)
+	routes.SysDailyAssetRoute(app)
+	routes.AudOpnameRoute(app)
+	routes.SysDefectaRoute(app)
+	routes.SysMemberCatRoute(app)
+	routes.SysMemberRoute(app)
 
 	// Hitung total rute
 	routeCount := 0
