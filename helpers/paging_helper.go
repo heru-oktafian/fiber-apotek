@@ -1,8 +1,11 @@
 package helpers
 
 import (
+	fmt "fmt"
 	math "math"
+	strconv "strconv"
 	strings "strings"
+	time "time"
 
 	fiber "github.com/gofiber/fiber/v2"
 	models "github.com/heru-oktafian/fiber-apotek/models"
@@ -67,4 +70,88 @@ func Paginate(c *fiber.Ctx, query *gorm.DB, model interface{}, searchFields []st
 	totalPages := int(math.Ceil(float64(total) / float64(limit)))
 
 	return model, search, int(total), page, totalPages, limit, nil
+}
+
+// PaginateWithSearchAndMonth adalah helper untuk menangani pagination dengan parameter search dan month
+// Parameters:
+//   - c: fiber context
+//   - query: gorm query builder
+//   - model: interface untuk menampung hasil data
+//   - searchColumn: nama kolom untuk filter search (contoh: "A.purchase_id")
+//   - dateColumn: nama kolom tanggal untuk filter bulan (contoh: "A.return_date")
+//   - page: halaman default jika tidak disediakan
+//   - limit: jumlah data per halaman
+//
+// Return:
+//   - data: hasil query yang sudah dipaginate
+//   - search: keyword search yang digunakan
+//   - total: total data yang sesuai filter
+//   - currentPage: halaman saat ini
+//   - totalPages: total halaman
+//   - error: error jika ada
+func PaginateWithSearchAndMonth(
+	c *fiber.Ctx,
+	query *gorm.DB,
+	model interface{},
+	searchColumn string,
+	dateColumn string,
+	defaultPage int,
+	defaultLimit int,
+) (interface{}, string, int, int, int, error) {
+	// Ambil parameter dari query URL
+	pageParam := c.Query("page")
+	search := strings.TrimSpace(c.Query("search"))
+	month := strings.TrimSpace(c.Query("month"))
+
+	// Konversi page ke int, default ke 1 jika tidak valid
+	page := defaultPage
+	if p, err := strconv.Atoi(pageParam); err == nil && p > 0 {
+		page = p
+	}
+
+	limit := defaultLimit        // Tetapkan limit ke default
+	offset := (page - 1) * limit // Hitung offset berdasarkan halaman dan limit
+
+	// Jika search kosong, set ke string kosong
+	if search != "" {
+		search = strings.ToLower(search)
+		query = query.Where("LOWER("+searchColumn+") ILIKE ?", "%"+search+"%")
+	}
+
+	// Jika month kosong, isi dengan bulan ini (format YYYY-MM)
+	if month == "" {
+		nowWIB := time.Now()
+		month = nowWIB.Format("2006-01")
+	}
+
+	// Filter berdasarkan bulan jika disediakan
+	if month != "" {
+		parsedMonth, err := time.Parse("2006-01", month)
+		if err != nil {
+			return nil, search, 0, page, 0, fmt.Errorf("format bulan tidak valid, gunakan format YYYY-MM")
+		}
+		startDate := parsedMonth
+		endDate := startDate.AddDate(0, 1, 0).Add(-time.Nanosecond)
+		query = query.Where(dateColumn+" BETWEEN ? AND ?", startDate, endDate)
+	}
+
+	var total int64
+
+	// Hitung total data yang sesuai dengan filter
+	if err := query.Count(&total).Error; err != nil {
+		return nil, search, 0, page, 0, err
+	}
+
+	// Ambil data dengan pagination
+	if err := query.Offset(offset).Limit(limit).Scan(model).Error; err != nil {
+		return nil, search, 0, page, 0, err
+	}
+
+	// Hitung total halaman berdasarkan hasil filter
+	totalPages := int(math.Ceil(float64(total) / float64(limit)))
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
+	return model, search, int(total), page, totalPages, nil
 }

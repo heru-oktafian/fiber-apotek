@@ -114,6 +114,8 @@ func main() {
 	routes.SysMemberRoute(app)
 	routes.SysReportRoute(app)
 	routes.SysUserRoute(app)
+	routes.SysUserBranchRoutes(app)
+	routes.TransAnotherIncomeRoute(app)
 
 	// Hitung total rute
 	routeCount := 0

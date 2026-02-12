@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/heru-oktafian/fiber-apotek/controllers"
-	"github.com/heru-oktafian/fiber-apotek/middlewares"
+	fiber "github.com/gofiber/fiber/v2"
+	controllers "github.com/heru-oktafian/fiber-apotek/controllers"
+	middlewares "github.com/heru-oktafian/fiber-apotek/middlewares"
 )
 
 func SysUserBranchRoutes(app *fiber.App) {

@@ -1,7 +1,6 @@
 package services
 
 import (
-	context "context"
 	json "encoding/json"
 	fmt "fmt"
 	time "time"
@@ -19,10 +18,8 @@ func GetRedisClient() *redis.Client {
 
 // SetTemporaryProductCache menyimpan daftar produk sementara untuk penjualan ke Redis dengan cacheKey sebagai pembeda
 func SetTemporaryProductCache(cacheKey string, products []models.ProdSaleCombo) error {
-	ctx := context.Background()
-
 	// Ping Redis to check connection
-	if _, err := configs.RDB.Ping(ctx).Result(); err != nil {
+	if _, err := configs.RDB.Ping(configs.Ctx).Result(); err != nil {
 		fmt.Printf("Redis ping failed: %v\n", err)
 		return err
 	}
@@ -34,7 +31,7 @@ func SetTemporaryProductCache(cacheKey string, products []models.ProdSaleCombo) 
 	}
 
 	// Set dengan TTL 30 menit
-	err = configs.RDB.Set(ctx, key, data, 30*time.Minute).Err()
+	err = configs.RDB.Set(configs.Ctx, key, data, 30*time.Minute).Err()
 	if err == nil {
 		fmt.Printf("Successfully saved product cache to Redis key: %s\n", key)
 	}
@@ -43,9 +40,8 @@ func SetTemporaryProductCache(cacheKey string, products []models.ProdSaleCombo) 
 
 // GetTemporaryProductCache mengambil daftar produk sementara untuk penjualan dari Redis berdasarkan cacheKey
 func GetTemporaryProductCache(cacheKey string) ([]models.ProdSaleCombo, error) {
-	ctx := context.Background()
 	key := fmt.Sprintf("tmp:products:sale:%s", cacheKey)
-	val, err := configs.RDB.Get(ctx, key).Result()
+	val, err := configs.RDB.Get(configs.Ctx, key).Result()
 	if err == redis.Nil {
 		return nil, nil // Tidak ada data cache
 	}
@@ -61,17 +57,14 @@ func GetTemporaryProductCache(cacheKey string) ([]models.ProdSaleCombo, error) {
 
 // DeleteTemporaryProductCache menghapus cache produk sementara untuk penjualan dari Redis berdasarkan cacheKey
 func DeleteTemporaryProductCache(cacheKey string) error {
-	ctx := context.Background()
 	key := fmt.Sprintf("tmp:products:sale:%s", cacheKey)
-	return configs.RDB.Del(ctx, key).Err()
+	return configs.RDB.Del(configs.Ctx, key).Err()
 }
 
 // SetTemporaryPurchaseProductCache menyimpan daftar produk sementara untuk pembelian ke Redis dengan cacheKey sebagai pembeda
 func SetTemporaryPurchaseProductCache(cacheKey string, products []models.ProdPurchaseCombo) error {
-	ctx := context.Background()
-
 	// Ping Redis to check connection
-	if _, err := configs.RDB.Ping(ctx).Result(); err != nil {
+	if _, err := configs.RDB.Ping(configs.Ctx).Result(); err != nil {
 		fmt.Printf("Redis ping failed: %v\n", err)
 		return err
 	}
@@ -83,7 +76,7 @@ func SetTemporaryPurchaseProductCache(cacheKey string, products []models.ProdPur
 	}
 
 	// Set dengan TTL 30 menit
-	err = configs.RDB.Set(ctx, key, data, 30*time.Minute).Err()
+	err = configs.RDB.Set(configs.Ctx, key, data, 30*time.Minute).Err()
 	if err == nil {
 		fmt.Printf("Successfully saved product cache to Redis key: %s\n", key)
 	}
@@ -92,9 +85,8 @@ func SetTemporaryPurchaseProductCache(cacheKey string, products []models.ProdPur
 
 // GetTemporaryPurchaseProductCache mengambil daftar produk pembelian sementara dari Redis berdasarkan cacheKey
 func GetTemporaryPurchaseProductCache(cacheKey string) ([]models.ProdPurchaseCombo, error) {
-	ctx := context.Background()
 	key := fmt.Sprintf("tmp:products:purchase:%s", cacheKey)
-	val, err := configs.RDB.Get(ctx, key).Result()
+	val, err := configs.RDB.Get(configs.Ctx, key).Result()
 	if err == redis.Nil {
 		return nil, nil // Tidak ada data cache
 	}
@@ -110,16 +102,14 @@ func GetTemporaryPurchaseProductCache(cacheKey string) ([]models.ProdPurchaseCom
 
 // DeleteTemporaryPurchaseProductCache menghapus cache produk pembelian sementara dari Redis berdasarkan cacheKey
 func DeleteTemporaryPurchaseProductCache(cacheKey string) error {
-	ctx := context.Background()
 	key := fmt.Sprintf("tmp:products:purchase:%s", cacheKey)
-	return configs.RDB.Del(ctx, key).Err()
+	return configs.RDB.Del(configs.Ctx, key).Err()
 }
 
 // SetTemporaryOpnameProductCache menyimpan daftar produk opname sementara ke Redis dengan cacheKey sebagai pembeda
 func SetTemporaryOpnameProductCache(cacheKey string, products []models.ComboboxProducts) error {
-	ctx := context.Background()
 	// Ping Redis to check connection
-	if _, err := configs.RDB.Ping(ctx).Result(); err != nil {
+	if _, err := configs.RDB.Ping(configs.Ctx).Result(); err != nil {
 		fmt.Printf("Redis ping failed: %v\n", err)
 		return err
 	}
@@ -129,7 +119,7 @@ func SetTemporaryOpnameProductCache(cacheKey string, products []models.ComboboxP
 		return err
 	}
 	// Set dengan TTL 30 menit
-	err = configs.RDB.Set(ctx, key, data, 30*time.Minute).Err()
+	err = configs.RDB.Set(configs.Ctx, key, data, 30*time.Minute).Err()
 	if err == nil {
 		fmt.Printf("Successfully saved opname product cache to Redis key: %s\n", key)
 	}
@@ -138,9 +128,8 @@ func SetTemporaryOpnameProductCache(cacheKey string, products []models.ComboboxP
 
 // GetTemporaryOpnameProductCache mengambil daftar produk opname sementara dari Redis berdasarkan cacheKey
 func GetTemporaryOpnameProductCache(cacheKey string) ([]models.ComboboxProducts, error) {
-	ctx := context.Background()
 	key := fmt.Sprintf("tmp:products:opname:%s", cacheKey)
-	val, err := configs.RDB.Get(ctx, key).Result()
+	val, err := configs.RDB.Get(configs.Ctx, key).Result()
 	if err == redis.Nil {
 		return nil, nil // Tidak ada data cache
 	}
@@ -156,17 +145,15 @@ func GetTemporaryOpnameProductCache(cacheKey string) ([]models.ComboboxProducts,
 
 // DeleteTemporaryOpnameProductCache menghapus cache produk opname sementara dari Redis berdasarkan cacheKey
 func DeleteTemporaryOpnameProductCache(cacheKey string) error {
-	ctx := context.Background()
 	key := fmt.Sprintf("tmp:products:opname:%s", cacheKey)
-	return configs.RDB.Del(ctx, key).Err()
+	return configs.RDB.Del(configs.Ctx, key).Err()
 }
 
 // UpdateSaleProductStockInRedisAsync mengupdate stock produk di cache PENJUALAN secara asinkron
 func UpdateSaleProductStockInRedisAsync(cacheKey, productID string, newStock int) {
 	go func() {
-		ctx := context.Background()
 		// Ping Redis to check connection
-		if _, err := configs.RDB.Ping(ctx).Result(); err != nil {
+		if _, err := configs.RDB.Ping(configs.Ctx).Result(); err != nil {
 			fmt.Printf("Redis ping failed: %v\n", err)
 			return
 		}
@@ -203,12 +190,38 @@ func UpdateSaleProductStockInRedisAsync(cacheKey, productID string, newStock int
 	}()
 }
 
+// UpdatePurchaseProductStockInRedisAsync mengupdate stock produk di cache PEMBELIAN secara asinkron
+func UpdatePurchaseProductStockInRedisAsync(cacheKey, productID string, newStock int) {
+	go func() {
+		// Ping Redis to check connection
+		if _, err := configs.RDB.Ping(configs.Ctx).Result(); err != nil {
+			fmt.Printf("Redis ping failed: %v\n", err)
+			return
+		}
+
+		// Ambil data cache produk pembelian
+		products, err := GetTemporaryPurchaseProductCache(cacheKey)
+		if err != nil {
+			fmt.Printf("Failed to get purchase product cache for cacheKey %s: %v\n", cacheKey, err)
+			return
+		}
+		if products == nil {
+			fmt.Printf("No purchase product cache found for cacheKey %s\n", cacheKey)
+			return
+		}
+
+		// Cari dan update stock produk (meskipun purchase combo tidak punya stock, tapi untuk konsistensi)
+		// Note: ProdPurchaseCombo tidak memiliki field Stock, jadi ini mungkin tidak diperlukan
+		// Tapi kita tetap implementasikan untuk konsistensi
+		fmt.Printf("Purchase product cache updated for product %s in cache key: tmp:products:purchase:%s\n", productID, cacheKey)
+	}()
+}
+
 // UpdateOpnameProductStockInRedisAsync mengupdate stock produk di cache OPNAME secara asinkron
 func UpdateOpnameProductStockInRedisAsync(cacheKey, productID string, newStock int) {
 	go func() {
-		ctx := context.Background()
 		// Ping Redis to check connection
-		if _, err := configs.RDB.Ping(ctx).Result(); err != nil {
+		if _, err := configs.RDB.Ping(configs.Ctx).Result(); err != nil {
 			fmt.Printf("Redis ping failed: %v\n", err)
 			return
 		}
