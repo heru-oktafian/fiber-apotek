@@ -117,6 +117,11 @@ func main() {
 	routes.SysUserBranchRoutes(app)
 	routes.TransAnotherIncomeRoute(app)
 	routes.TransBuyReturnRoutes(app)
+	routes.TransDuplicateReceiptRoutes(app)
+	routes.TransExpenseRoutes(app)
+	routes.TransPurchaseRoutes(app)
+	routes.TransSaleRoutes(app)
+	routes.TransSaleReturnRoutes(app)
 
 	// Hitung total rute
 	routeCount := 0
