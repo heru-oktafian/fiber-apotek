@@ -13,6 +13,7 @@ import (
 	helpers "github.com/heru-oktafian/fiber-apotek/helpers"
 	models "github.com/heru-oktafian/fiber-apotek/models"
 	services "github.com/heru-oktafian/fiber-apotek/services"
+	reports "github.com/heru-oktafian/fiber-apotek/services/reports"
 	gorm "gorm.io/gorm"
 )
 
@@ -60,11 +61,11 @@ func CreatePurchase(c *fiber.Ctx) error {
 	}
 
 	// Buat laporan
-	if err := services.SyncPurchaseReport(db, purchase); err != nil {
+	if err := reports.SyncPurchaseReport(db, purchase); err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to sync purchase report", err)
 	}
 
-	_ = services.AutoCleanupPurchases(db)
+	_ = reports.AutoCleanupPurchases(db)
 
 	return helpers.JSONResponse(c, fiber.StatusOK, "Purchase created successfully", purchase)
 }
@@ -143,11 +144,11 @@ func UpdatePurchase(c *fiber.Ctx) error {
 	}
 
 	// Sync report
-	if err := services.SyncPurchaseReport(db, purchase); err != nil {
+	if err := reports.SyncPurchaseReport(db, purchase); err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to sync purchase report", err)
 	}
 
-	_ = services.AutoCleanupPurchases(db)
+	_ = reports.AutoCleanupPurchases(db)
 
 	return helpers.JSONResponse(c, fiber.StatusOK, "Purchase updated successfully", purchase)
 }
@@ -246,7 +247,7 @@ func CreatePurchaseItem(c *fiber.Ctx) error {
 			}
 
 			// Recalculate total pembelian
-			if err := services.RecalculateTotalPurchase(db, item.PurchaseId); err != nil {
+			if err := reports.RecalculateTotalPurchase(db, item.PurchaseId); err != nil {
 				fmt.Printf("Failed to recalculate total purchase asynchronously: %v\n", err)
 			}
 
@@ -290,7 +291,7 @@ func CreatePurchaseItem(c *fiber.Ctx) error {
 		}
 
 		// Recalculate total pembelian
-		if err := services.RecalculateTotalPurchase(db, item.PurchaseId); err != nil {
+		if err := reports.RecalculateTotalPurchase(db, item.PurchaseId); err != nil {
 			fmt.Printf("Failed to recalculate total purchase asynchronously: %v\n", err)
 		}
 
@@ -361,7 +362,7 @@ func UpdatePurchaseItem(c *fiber.Ctx) error {
 		}
 
 		// Recalculate total & sync
-		if err := services.RecalculateTotalPurchase(db, existingItem.PurchaseId); err != nil {
+		if err := reports.RecalculateTotalPurchase(db, existingItem.PurchaseId); err != nil {
 			fmt.Printf("Failed to recalculate total purchase asynchronously: %v\n", err)
 		}
 
@@ -418,7 +419,7 @@ func DeletePurchaseItem(c *fiber.Ctx) error {
 	// Supporting operations asynchronously
 	go func() {
 		// Recalculate total
-		if err := services.RecalculateTotalPurchase(db, item.PurchaseId); err != nil {
+		if err := reports.RecalculateTotalPurchase(db, item.PurchaseId); err != nil {
 			fmt.Printf("Failed to recalculate total purchase asynchronously: %v\n", err)
 		}
 

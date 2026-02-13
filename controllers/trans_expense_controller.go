@@ -9,6 +9,7 @@ import (
 	helpers "github.com/heru-oktafian/fiber-apotek/helpers"
 	models "github.com/heru-oktafian/fiber-apotek/models"
 	services "github.com/heru-oktafian/fiber-apotek/services"
+	reports "github.com/heru-oktafian/fiber-apotek/services/reports"
 )
 
 // CreateExpense Function
@@ -59,7 +60,7 @@ func CreateExpense(c *fiber.Ctx) error {
 	}
 
 	// Buat laporan
-	if err := services.SyncExpenseReport(db, expense); err != nil {
+	if err := reports.SyncExpenseReport(db, expense); err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to create Expense Report", err)
 	}
 
@@ -107,7 +108,7 @@ func UpdateExpense(c *fiber.Ctx) error {
 	}
 
 	// Sync report
-	if err := services.SyncExpenseReport(db, expense); err != nil {
+	if err := reports.SyncExpenseReport(db, expense); err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to sync Expense Report", err)
 	}
 
