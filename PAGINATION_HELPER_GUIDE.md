@@ -9,7 +9,7 @@ func PaginateWithSearchAndMonth(
 	c *fiber.Ctx,
 	query *gorm.DB,
 	model interface{},
-	searchColumn string,
+	searchColumns []string,
 	dateColumn string,
 	defaultPage int,
 	defaultLimit int,
@@ -20,7 +20,7 @@ func PaginateWithSearchAndMonth(
 - **c**: Fiber context dari HTTP request
 - **query**: GORM query builder yang sudah dikonfigurasi (dengan select, where, order, dll)
 - **model**: Pointer ke slice struct untuk menampung hasil data (contoh: `&[]models.AllBuyReturns{}`)
-- **searchColumn**: Nama kolom untuk filter search (contoh: `"A.purchase_id"`)
+- **searchColumns**: Slice of string untuk kolom filter search (contoh: `[]string{"A.purchase_id", "A.payment"}`)
 - **dateColumn**: Nama kolom tanggal untuk filter bulan (contoh: `"A.return_date"`)
 - **defaultPage**: Halaman default jika parameter page tidak disediakan (biasanya `1`)
 - **defaultLimit**: Jumlah data per halaman (contoh: `10`)
@@ -137,7 +137,7 @@ func GetAllBuyReturns(c *fiber.Ctx) error {
 		c,
 		query,
 		&buyReturnsFromDB,
-		"A.purchase_id",        // searchColumn
+		[]string{"A.purchase_id"}, // searchColumns
 		"A.return_date",        // dateColumn
 		1,                      // defaultPage
 		10,                     // defaultLimit
@@ -228,11 +228,11 @@ Helper ini dapat digunakan untuk limit berbeda di controller yang berbeda:
 
 ```go
 // Untuk list dengan limit 10
-helpers.PaginateWithSearchAndMonth(c, query, &data, "column", "date_column", 1, 10)
+helpers.PaginateWithSearchAndMonth(c, query, &data, []string{"column"}, "date_column", 1, 10)
 
 // Untuk list dengan limit 20
-helpers.PaginateWithSearchAndMonth(c, query, &data, "column", "date_column", 1, 20)
+helpers.PaginateWithSearchAndMonth(c, query, &data, []string{"column"}, "date_column", 1, 20)
 
 // Untuk list dengan limit 50
-helpers.PaginateWithSearchAndMonth(c, query, &data, "column", "date_column", 1, 50)
+helpers.PaginateWithSearchAndMonth(c, query, &data, []string{"column"}, "date_column", 1, 50)
 ```

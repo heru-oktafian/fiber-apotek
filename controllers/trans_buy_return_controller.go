@@ -2,8 +2,6 @@ package controllers
 
 import (
 	fmt "fmt"
-	math "math"
-	strconv "strconv"
 	strings "strings"
 	time "time"
 
@@ -363,60 +361,28 @@ func GetBuyReturnWithItems(c *fiber.Ctx) error {
 
 // GetAllBuyReturns menampilkan semua retur pembelian
 func GetAllBuyReturns(c *fiber.Ctx) error {
-	// Hitung waktu sekarang dalam WIB
-	nowWIB := time.Now().In(configs.Location)
-
 	branchID, _ := services.GetBranchID(c)
 
-	// Ambil parameter page dan search dari query URL
-	pageParam := c.Query("page")
-	search := strings.TrimSpace(c.Query("search"))
-
-	// Konversi page ke int, default ke 1 jika tidak valid
-	page := 1
-	if p, err := strconv.Atoi(pageParam); err == nil && p > 0 {
-		page = p
-	}
-
-	limit := 10                  // Tetapkan limit ke 10 data per halaman
-	offset := (page - 1) * limit // Hitung offset berdasarkan halaman dan limit
-
-	month := strings.TrimSpace(c.Query("month"))
-
-	// Jika month kosong, isi dengan bulan ini (format YYYY-MM)
-	if month == "" {
-		month = nowWIB.Format("2006-01")
-	}
-
-	var buyReturnsFromDB []models.AllBuyReturns // Gunakan models.AllBuyReturns untuk mengambil data dari DB
-	var total int64
+	var buyReturnsFromDB []models.AllBuyReturns
 
 	query := configs.DB.Table("buy_returns A").
 		Select("A.id, A.purchase_id, A.return_date, A.payment, A.total_return").
 		Where("A.branch_id = ? ", branchID).
 		Order("A.created_at DESC")
 
-	if search != "" {
-		search = strings.ToLower(search)
-		query = query.Where("LOWER(A.purchase_id) ILIKE ?", "%"+search+"%")
-	}
+	// panggil helper paginate dengan parameter search dan month
+	_, search, total, page, totalPages, err := helpers.PaginateWithSearchAndMonth(
+		c,
+		query,
+		&buyReturnsFromDB,
+		[]string{"A.purchase_id"},
+		"A.return_date",
+		1,
+		10,
+	)
 
-	if month != "" {
-		parsedMonth, err := time.Parse("2006-01", month)
-		if err != nil {
-			return helpers.JSONResponse(c, fiber.StatusBadRequest, "Format bulan tidak valid", "Bulan harus dalam format YYYY-MM")
-		}
-		startDate := parsedMonth
-		endDate := startDate.AddDate(0, 1, 0).Add(-time.Nanosecond)
-		query = query.Where("A.return_date BETWEEN ? AND ?", startDate, endDate)
-	}
-
-	if err := query.Count(&total).Error; err != nil {
-		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Gagal mengambil retur pembelian", "Gagal menghitung retur pembelian")
-	}
-
-	if err := query.Offset(offset).Limit(limit).Scan(&buyReturnsFromDB).Error; err != nil {
-		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Gagal mengambil retur pembelian", "Gagal mengambil data retur pembelian")
+	if err != nil {
+		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Gagal mengambil retur pembelian", err.Error())
 	}
 
 	// Buat slice baru untuk menampung data yang sudah diformat
@@ -425,25 +391,22 @@ func GetAllBuyReturns(c *fiber.Ctx) error {
 		formattedBuyReturnsData = append(formattedBuyReturnsData, models.BuyReturnsResponse{
 			ID:          buyReturn.ID,
 			PurchaseId:  buyReturn.PurchaseId,
-			ReturnDate:  helpers.FormatIndonesianDate(buyReturn.ReturnDate), // Format tanggal di sini
+			ReturnDate:  helpers.FormatIndonesianDate(buyReturn.ReturnDate),
 			TotalReturn: buyReturn.TotalReturn,
 			Payment:     string(buyReturn.Payment),
 		})
 	}
 
-	totalPages := int(math.Ceil(float64(total) / float64(limit)))
-
-	// Gunakan JSONResponseGetAll helper dengan data yang sudah diformat
 	return helpers.JSONResponseGetAll(
 		c,
 		fiber.StatusOK,
 		"Data retur pembelian berhasil diambil",
 		search,
-		int(total),
+		total,
 		page,
 		totalPages,
-		limit,
-		formattedBuyReturnsData, // Kirim data yang sudah diformat (slice dari BuyDetailResponse)
+		10,
+		formattedBuyReturnsData,
 	)
 }
 

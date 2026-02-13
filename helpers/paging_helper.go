@@ -93,7 +93,7 @@ func PaginateWithSearchAndMonth(
 	c *fiber.Ctx,
 	query *gorm.DB,
 	model interface{},
-	searchColumn string,
+	searchColumns []string,
 	dateColumn string,
 	defaultPage int,
 	defaultLimit int,
@@ -114,8 +114,16 @@ func PaginateWithSearchAndMonth(
 
 	// Jika search kosong, set ke string kosong
 	if search != "" {
-		search = strings.ToLower(search)
-		query = query.Where("LOWER("+searchColumn+") ILIKE ?", "%"+search+"%")
+		searchLower := strings.ToLower(search)
+		if len(searchColumns) > 0 {
+			var conditions []string
+			var args []interface{}
+			for _, col := range searchColumns {
+				conditions = append(conditions, "LOWER("+col+") ILIKE ?")
+				args = append(args, "%"+searchLower+"%")
+			}
+			query = query.Where(strings.Join(conditions, " OR "), args...)
+		}
 	}
 
 	// Jika month kosong, isi dengan bulan ini (format YYYY-MM)

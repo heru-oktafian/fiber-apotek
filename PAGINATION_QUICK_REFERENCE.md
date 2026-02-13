@@ -15,7 +15,7 @@ result, search, total, page, totalPages, err := helpers.PaginateWithSearchAndMon
     c,
     query,
     &data,
-    "column_untuk_search",    // contoh: "A.purchase_id"
+    []string{"A.purchase_id"}, // contoh: []string{"A.purchase_id", "A.payment"}
     "column_untuk_date_filter", // contoh: "A.return_date"
     1,    // defaultPage
     10,   // defaultLimit (data per halaman)
@@ -57,7 +57,7 @@ error         error       // Error jika ada
 1. ✅ Gunakan **pointer** saat memanggil helper: `&data` bukan `data`
 2. ✅ **Cast data** setelah menerima result: `data.([]models.YourModel)`
 3. ✅ Query harus sudah **Select** dan **Where** sebelum dipassing ke helper
-4. ✅ Pastikan **searchColumn** dan **dateColumn** sesuai dengan query yang dikonfigurasi
+4. ✅ Pastikan **searchColumns** (slice) dan **dateColumn** sesuai dengan query yang dikonfigurasi
 5. ✅ **Bulan default** adalah bulan saat ini jika tidak disediakan
 
 ## Perbandingan Kode
@@ -86,7 +86,7 @@ totalPages := int(math.Ceil(float64(total) / 10))
 
 ### Dengan Helper (~1 baris)
 ```go
-data, search, total, page, totalPages, err := helpers.PaginateWithSearchAndMonth(c, query, &data, "A.purchase_id", "A.return_date", 1, 10)
+data, search, total, page, totalPages, err := helpers.PaginateWithSearchAndMonth(c, query, &data, []string{"A.purchase_id"}, "A.return_date", 1, 10)
 ```
 
 ## File yang Telah Ditambahkan

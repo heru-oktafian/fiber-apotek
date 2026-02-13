@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	context "context"
 	fmt "fmt"
 	log "log"
 	os "os"
@@ -9,7 +8,7 @@ import (
 
 	fiber "github.com/gofiber/fiber/v2"
 	jwt "github.com/golang-jwt/jwt/v5"
-	config "github.com/heru-oktafian/fiber-apotek/configs"
+	configs "github.com/heru-oktafian/fiber-apotek/configs"
 )
 
 // TokenValidation memvalidasi token
@@ -25,10 +24,9 @@ func TokenValidation(c *fiber.Ctx, key string) error {
 	}
 
 	// Periksa token di daftar hitam Redis
-	ctx := context.Background()
 	redisKey := fmt.Sprintf("blacklist:%s", token)
-	rdb := config.RDB
-	isBlacklisted, err := rdb.Exists(ctx, redisKey).Result()
+	rdb := configs.RDB
+	isBlacklisted, err := rdb.Exists(configs.Ctx, redisKey).Result()
 
 	if err != nil {
 		log.Printf("Error checking token in Redis: %v", err)

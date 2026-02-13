@@ -27,10 +27,10 @@ func GetAllBuyReturnsSimplified(c *fiber.Ctx) error {
 		c,
 		query,
 		&buyReturnsFromDB,
-		"A.purchase_id", // searchColumn: kolom mana yang akan di-search
-		"A.return_date", // dateColumn: kolom tanggal untuk filter bulan
-		1,               // defaultPage: halaman awal jika tidak disediakan
-		10,              // defaultLimit: 10 data per halaman
+		[]string{"A.purchase_id"}, // searchColumn: kolom mana yang akan di-search
+		"A.return_date",           // dateColumn: kolom tanggal untuk filter bulan
+		1,                         // defaultPage: halaman awal jika tidak disediakan
+		10,                        // defaultLimit: 10 data per halaman
 	)
 
 	if err != nil {
@@ -80,17 +80,12 @@ func GetAllBuyReturnsWithMultiSearch(c *fiber.Ctx) error {
 		Where("A.branch_id = ? ", branchID).
 		Order("A.created_at DESC")
 
-	// Jika ingin search multiple columns, handle sebelum helper
-	if search != "" {
-		query = query.Where("LOWER(A.purchase_id) ILIKE ? OR LOWER(A.payment) ILIKE ?", "%"+search+"%", "%"+search+"%")
-	}
-
-	// Gunakan helper untuk pagination dan month
+	// Gunakan helper untuk pagination, search, dan month (support multi-column search)
 	data, _, total, page, totalPages, err := helpers.PaginateWithSearchAndMonth(
 		c,
 		query,
 		&buyReturnsFromDB,
-		"A.purchase_id", // Ini tidak akan digunakan karena sudah di-filter di atas
+		[]string{"A.purchase_id", "A.payment"}, // Search di kedua kolom ini
 		"A.return_date",
 		1,
 		10,
@@ -144,7 +139,7 @@ func GetAllBuyReturnsWithCustomLimit(c *fiber.Ctx) error {
 		c,
 		query,
 		&buyReturnsFromDB,
-		"A.purchase_id",
+		[]string{"A.purchase_id"},
 		"A.return_date",
 		1,
 		20, // Limit 20 per halaman
@@ -204,7 +199,7 @@ func GetAllPurchasesWithPagination(c *fiber.Ctx) error {
 		c,
 		query,
 		&purchases,
-		"A.id",            // Search berdasarkan purchase ID
+		[]string{"A.id"},  // Search berdasarkan purchase ID
 		"A.purchase_date", // Filter berdasarkan tanggal pembelian
 		1,
 		10,
