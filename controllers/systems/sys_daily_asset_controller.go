@@ -111,7 +111,7 @@ func GetAllAssets(c *fiber.Ctx) error {
 	return JSONResponseGetAllAssets(
 		c,
 		fiber.StatusOK,
-		"Sales retrieved successfully",
+		"Daily assets retrieved successfully",
 		"",
 		vMonthlyAssetAverage,
 		int(total),

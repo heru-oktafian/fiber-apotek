@@ -7,6 +7,6 @@ import (
 )
 
 func SysReportRoute(app *fiber.App) {
-	app.Get("/sys/report/neraca-saldo", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetNeracaSaldo)
-	app.Get("/sys/report/profit-by-month", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetProfitGraphByMonth)
+	app.Get("/api/report/neraca-saldo", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetNeracaSaldo)
+	app.Get("/api/report/profit-by-month", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetProfitGraphByMonth)
 }
