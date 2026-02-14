@@ -2,7 +2,7 @@ package routes
 
 import (
 	fiber "github.com/gofiber/fiber/v2"
-	controllers "github.com/heru-oktafian/fiber-apotek/controllers"
+	controllers "github.com/heru-oktafian/fiber-apotek/controllers/masters"
 	middlewares "github.com/heru-oktafian/fiber-apotek/middlewares"
 )
 

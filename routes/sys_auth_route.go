@@ -4,7 +4,7 @@ import (
 	os "os"
 
 	fiber "github.com/gofiber/fiber/v2"
-	controllers "github.com/heru-oktafian/fiber-apotek/controllers"
+	controllers "github.com/heru-oktafian/fiber-apotek/controllers/systems"
 	helpers "github.com/heru-oktafian/fiber-apotek/helpers"
 	middlewares "github.com/heru-oktafian/fiber-apotek/middlewares"
 	services "github.com/heru-oktafian/fiber-apotek/services"

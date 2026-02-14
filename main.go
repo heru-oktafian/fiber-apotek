@@ -13,9 +13,8 @@ import (
 	helpers "github.com/heru-oktafian/fiber-apotek/helpers"
 	routes "github.com/heru-oktafian/fiber-apotek/routes"
 	seeders "github.com/heru-oktafian/fiber-apotek/seeders"
-	services "github.com/heru-oktafian/fiber-apotek/services"
+	crons "github.com/heru-oktafian/fiber-apotek/services/crons"
 	godotenv "github.com/joho/godotenv"
-	cron "github.com/robfig/cron/v3"
 )
 
 func main() {
@@ -51,34 +50,10 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Jalankan routine
 	go func() {
-		// 1. Set lokasi waktu ke Asia/Jakarta
-		loc, err := time.LoadLocation("Asia/Jakarta")
-		if err != nil {
-			log.Fatalf("❌ Gagal load lokasi Asia/Jakarta: %v", err)
-		}
-
-		// 2. Inisialisasi cron dengan lokasi waktu yang benar
-		c := cron.New(cron.WithLocation(loc))
-
-		// 3. Tambahkan job harian pukul 23:30
-		_, err = c.AddFunc("30 23 * * *", func() {
-			log.Println("🚀 Memulai backup database dan upload ke Google Drive...")
-
-			if err := services.DumpDatabaseToFile(); err != nil {
-				log.Printf("❌ Backup gagal: %v\n", err)
-			} else {
-				log.Println("✅ Backup dan upload ke Google Drive berhasil.")
-			}
-		})
-
-		if err != nil {
-			log.Fatalf("❌ Gagal menjadwalkan cron job: %v", err)
-		}
-
-		// 4. Mulai cron scheduler
-		c.Start()
-		log.Println("📅 Cron backup database aktif setiap pukul 23:30 WIB")
+		// Jalankan scheduler jobs
+		crons.SchedulerJobs(configs.DB)
 	}()
 
 	// Inisialisasi Fiber

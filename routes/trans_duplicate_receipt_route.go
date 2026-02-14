@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/heru-oktafian/fiber-apotek/controllers"
+	fiber "github.com/gofiber/fiber/v2"
+	controllers "github.com/heru-oktafian/fiber-apotek/controllers/transactions"
 	middlewares "github.com/heru-oktafian/fiber-apotek/middlewares"
 )
 

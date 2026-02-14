@@ -1,4 +1,4 @@
-package services
+package crons
 
 import (
 	fmt "fmt"
@@ -9,10 +9,9 @@ import (
 	time "time"
 )
 
-func DumpDatabaseToFile() error {
-	// Format nama file: dd-mm-yyyy.sql
+func DBDump() error {
 	filename := os.Getenv("PROJECT_NAME") + "_" + time.Now().Format("02-01-2006") + ".sql"
-	outputDir := "dump"
+	outputDir := ".backup_db"
 	outputPath := filepath.Join(outputDir, filename)
 
 	// 2. Buat folder dump jika belum ada
@@ -49,12 +48,5 @@ func DumpDatabaseToFile() error {
 	}
 
 	log.Printf("✅ Backup berhasil: %s\n", outputPath)
-
-	// 6. Upload file ke Google Drive
-	// if err := UploadFileToGoogleDrive(outputPath, filename); err != nil {
-	// 	return fmt.Errorf("failed to upload to Google Drive: %w", err)
-	// }
-
-	log.Println("✅ File berhasil diupload ke Google Drive:", filename)
 	return nil
 }

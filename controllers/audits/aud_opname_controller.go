@@ -173,7 +173,7 @@ func GetAllOpnames(c *fiber.Ctx) error {
 	totalPages := int(math.Ceil(float64(total) / float64(limit)))
 
 	// Kembalikan hasil response tanpa nested "data"
-	return JSONResponseFlat(c, http.StatusOK, "Data Opname berhasil diambil", map[string]interface{}{
+	return helpers.JSONResponseFlat(c, http.StatusOK, "Data Opname berhasil diambil", map[string]interface{}{
 		"per_page":     limit,
 		"current_page": page,
 		"search":       search,
@@ -181,12 +181,6 @@ func GetAllOpnames(c *fiber.Ctx) error {
 		"total_pages":  totalPages,
 		"data":         opnames,
 	})
-}
-
-func JSONResponseFlat(c *fiber.Ctx, status int, message string, payload map[string]interface{}) error {
-	payload["status"] = "success"
-	payload["message"] = message
-	return c.Status(status).JSON(payload)
 }
 
 // CreateOpname Function
@@ -435,15 +429,12 @@ func CreateOpnameItem(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, http.StatusBadRequest, "Format tanggal tidak valid. Gunakan YYYY-MM-DD", err)
 	}
 
-	if product.Stock > 0 {
-		if product.ExpiredDate.After(parsedDate) {
-			product.ExpiredDate = parsedDate
-		}
-	} else {
-		product.ExpiredDate = parsedDate
-	}
-	if err := db.Model(&product).Update("expired_date", product.ExpiredDate).Error; err != nil {
-		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal memperbarui tanggal kedaluwarsa produk: "+err.Error(), err)
+	// Update expired date dan stock produk sesuai inputan
+	if err := db.Model(&product).Updates(map[string]interface{}{
+		"expired_date": parsedDate,
+		"stock":        input.Qty,
+	}).Error; err != nil {
+		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal memperbarui produk: "+err.Error(), err)
 	}
 
 	var opnameItem models.OpnameItems
@@ -568,6 +559,14 @@ func UpdateOpnameItemByID(c *fiber.Ctx) error {
 
 	if err := db.Save(&existingItem).Error; err != nil {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal menyimpan item: "+err.Error(), err)
+	}
+
+	// Update expired date dan stock produk sesuai inputan
+	if err := db.Model(&models.Product{}).Where("id = ?", updatedItem.ProductId).Updates(map[string]interface{}{
+		"expired_date": parsedDate,
+		"stock":        updatedItem.Qty,
+	}).Error; err != nil {
+		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal memperbarui produk: "+err.Error(), err)
 	}
 
 	// Update harga produk jika harga item lebih tinggi

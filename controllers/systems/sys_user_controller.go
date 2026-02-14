@@ -51,7 +51,7 @@ func GetUsers(c *fiber.Ctx) error {
 	}
 
 	// Kembalikan hasil response tanpa nested "data"
-	return JSONResponseFlat(c, fiber.StatusOK, "Data berhasil diambil", map[string]interface{}{
+	return helpers.JSONResponseFlat(c, fiber.StatusOK, "Data berhasil diambil", map[string]interface{}{
 		"per_page":     limit,
 		"current_page": page,
 		"search":       search,

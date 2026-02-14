@@ -37,3 +37,9 @@ func JSONResponseGetAll(c *fiber.Ctx, status int, message string, search string,
 	}
 	return c.Status(status).JSON(resp)
 }
+
+func JSONResponseFlat(c *fiber.Ctx, status int, message string, payload map[string]interface{}) error {
+	payload["status"] = "success"
+	payload["message"] = message
+	return c.Status(status).JSON(payload)
+}
