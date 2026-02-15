@@ -2,6 +2,7 @@ package excels
 
 import (
 	fmt "fmt"
+	"log"
 
 	fiber "github.com/gofiber/fiber/v2"
 	"github.com/heru-oktafian/fiber-apotek/services"
@@ -20,17 +21,27 @@ func NewProductHandler(excelService *export_services.ExcelService) *ProductHandl
 func (h *ProductHandler) ExportExcel(c *fiber.Ctx) error {
 	// Ambil branch_id dari JWT middleware kamu (biasanya disimpan di Locals)
 	branchID, _ := services.GetBranchID(c)
+	log.Printf("DEBUG: Export dimulai untuk branch_id: %s", branchID)
+
 	excelBytes, err := h.excelService.ExportProductsToExcel(branchID)
 	if err != nil {
+		log.Printf("ERROR: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": fmt.Sprintf("gagal generate excel: %v", err),
 		})
 	}
 
-	// Set header supaya langsung download
+	// Cek apakah bytes kosong (kalau gak ada data)
+	if len(excelBytes) == 0 {
+		log.Println("WARNING: Excel generated tapi kosong (no data)")
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"status":  "success",
+			"message": "Data ditemukan tapi kosong",
+			"data":    nil, // Ini yang bikin response kamu gini
+		})
+	}
+
 	c.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Set("Content-Disposition", `attachment; filename="produk.xlsx"`)
-
-	// Kirim file
 	return c.Send(excelBytes)
 }
