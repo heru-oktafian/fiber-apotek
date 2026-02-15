@@ -31,13 +31,14 @@ func (h *ProductHandler) ExportExcel(c *fiber.Ctx) error {
 		})
 	}
 
+	// Debug: Cek ukuran bytes yang dikembalikan
+	log.Printf("DEBUG: Ukuran excel bytes: %d bytes", len(excelBytes))
+
 	// Cek apakah bytes kosong (kalau gak ada data)
 	if len(excelBytes) == 0 {
-		log.Println("WARNING: Excel generated tapi kosong (no data)")
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"status":  "success",
-			"message": "Data ditemukan tapi kosong",
-			"data":    nil, // Ini yang bikin response kamu gini
+		log.Println("ERROR: Excel bytes kosong - mungkin ada issue di service")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "gagal generate file excel - bytes kosong",
 		})
 	}
 

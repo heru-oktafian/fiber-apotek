@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/heru-oktafian/fiber-apotek/models"
@@ -21,22 +22,36 @@ func NewExcelService(db *gorm.DB) *ExcelService {
 func (s *ExcelService) ExportProductsToExcel(branchID string) ([]byte, error) {
 	var products []models.ProductDetail
 
-	// Query dengan join agar dapat UnitName (kalau ProductDetail kamu sudah include, bisa di-skip join-nya)
-	err := s.db.Debug().Model(&models.Product{}).
+	// Query dengan join agar dapat UnitName dan ProductCategoryName
+	err := s.db.
 		Select(`
-			products.*,
+			products.id,
+			products.sku,
+			products.name,
+			products.alias,
+			products.unit_id,
 			units.name as unit_name,
+			products.stock,
+			products.purchase_price,
+			products.sales_price,
+			products.alternate_price,
+			products.expired_date,
+			products.product_category_id,
 			product_categories.name as product_category_name
 		`).
+		Table("products").
 		Joins("LEFT JOIN units ON units.id = products.unit_id").
 		Joins("LEFT JOIN product_categories ON product_categories.id = products.product_category_id").
-		//Where("products.branch_id = ?", branchID).
+		Where("products.branch_id = ?", branchID).
 		Order("products.name ASC").
-		Find(&products).Error
+		Scan(&products).Error
 
 	if err != nil {
+		log.Printf("ERROR ExportProductsToExcel: Query error: %v", err)
 		return nil, fmt.Errorf("failed to fetch products: %w", err)
 	}
+
+	log.Printf("DEBUG ExportProductsToExcel: Ditemukan %d produk untuk branch_id: %s", len(products), branchID)
 
 	f := excelize.NewFile()
 	sheet := "Produk"
@@ -104,7 +119,7 @@ func (s *ExcelService) ExportProductsToExcel(branchID string) ([]byte, error) {
 	_ = f.SetColWidth(sheet, "J", "J", 15)
 
 	// Buat Table (supaya ada filter & styling bagus)
-	_ = f.AddTable(sheet, &excelize.Table{
+	tableErr := f.AddTable(sheet, &excelize.Table{
 		Range:           fmt.Sprintf("A1:J%d", len(products)+1),
 		Name:            "ProdukTable",
 		StyleName:       "TableStyleMedium9",
@@ -113,14 +128,21 @@ func (s *ExcelService) ExportProductsToExcel(branchID string) ([]byte, error) {
 		// ShowRowStripes:    true,
 		ShowColumnStripes: false,
 	})
+	if tableErr != nil {
+		log.Printf("WARNING: AddTable error (non-critical): %v", tableErr)
+	}
 
 	// Return sebagai byte (siap dikirim ke browser)
 	buf, err := f.WriteToBuffer()
 	if err != nil {
+		log.Printf("ERROR ExportProductsToExcel: WriteToBuffer error: %v", err)
 		return nil, fmt.Errorf("failed to write excel: %w", err)
 	}
 
-	return buf.Bytes(), nil
+	fileBytes := buf.Bytes()
+	log.Printf("DEBUG ExportProductsToExcel: File Excel berhasil dibuat, ukuran: %d bytes", len(fileBytes))
+
+	return fileBytes, nil
 }
 
 // formatRupiah mengubah 4900 → "Rp. 4.900"
