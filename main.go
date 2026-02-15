@@ -73,6 +73,7 @@ func main() {
 
 	// Setup rute
 	routes.AuthRoutes(app)
+	routes.ExportExcelRoutes(app) // ✅ Harus sebelum MasterProductRoute agar tidak ter-match oleh :id pattern
 	routes.SysBranchRoutes(app)
 	routes.AudFirstStockRoutes(app)
 	routes.MasterProductCatRoute(app)
@@ -97,7 +98,6 @@ func main() {
 	routes.TransPurchaseRoutes(app)
 	routes.TransSaleRoutes(app)
 	routes.TransSaleReturnRoutes(app)
-	routes.ExportExcelRoutes(app)
 
 	// Hitung total rute
 	routeCount := 0

@@ -18,7 +18,7 @@ func NewExcelService(db *gorm.DB) *ExcelService {
 	return &ExcelService{db: db}
 }
 
-// ExportProductsToExcel menghasilkan file Excel sesuai format yang kamu minta
+// ExportProductsToExcel menghasilkan file Excel dengan data produk per branch
 func (s *ExcelService) ExportProductsToExcel(branchID string) ([]byte, error) {
 	var products []models.ProductDetail
 
@@ -47,17 +47,28 @@ func (s *ExcelService) ExportProductsToExcel(branchID string) ([]byte, error) {
 		Scan(&products).Error
 
 	if err != nil {
-		log.Printf("ERROR ExportProductsToExcel: Query error: %v", err)
+		log.Printf("[ExportProductsToExcel] Query error: %v", err)
 		return nil, fmt.Errorf("failed to fetch products: %w", err)
 	}
-
-	log.Printf("DEBUG ExportProductsToExcel: Ditemukan %d produk untuk branch_id: %s", len(products), branchID)
 
 	f := excelize.NewFile()
 	sheet := "Produk"
 	f.SetSheetName("Sheet1", sheet)
 
-	// Header
+	// === ROW 1: JUDUL ===
+	f.SetCellValue(sheet, "A1", "DATA PRODUK")
+	titleStyle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Size: 14, Color: "#FFFFFF"},
+		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1565C0"}, Pattern: 1},
+		Alignment: &excelize.Alignment{Horizontal: "left", Vertical: "center"},
+	})
+	f.SetCellStyle(sheet, "A1", "J1", titleStyle)
+	f.SetRowHeight(sheet, 1, 25)
+
+	// === ROW 2: JARAK (kosong) ===
+	// (tidak perlu action, biarkan kosong)
+
+	// === ROW 3: HEADER ===
 	headers := []string{
 		"ID", "SKU", "NAME", "ALIAS",
 		"PURCHASE PRI", "SALE PRI", "ALTERNATIF PRI",
@@ -66,7 +77,7 @@ func (s *ExcelService) ExportProductsToExcel(branchID string) ([]byte, error) {
 
 	for i, h := range headers {
 		cell, _ := excelize.ColumnNumberToName(i + 1)
-		f.SetCellValue(sheet, cell+"1", h)
+		f.SetCellValue(sheet, cell+"3", h)
 	}
 
 	// Style Header (bold + background)
@@ -81,11 +92,11 @@ func (s *ExcelService) ExportProductsToExcel(branchID string) ([]byte, error) {
 			{Type: "right", Color: "000000", Style: 1},
 		},
 	})
-	f.SetCellStyle(sheet, "A1", "J1", headerStyle)
+	f.SetCellStyle(sheet, "A3", "J3", headerStyle)
 
-	// Isi Data
+	// === ROW 4+: DATA ===
 	for i, p := range products {
-		row := i + 2
+		row := i + 4
 
 		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), p.ID)
 		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), p.SKU)
@@ -120,29 +131,25 @@ func (s *ExcelService) ExportProductsToExcel(branchID string) ([]byte, error) {
 
 	// Buat Table (supaya ada filter & styling bagus)
 	tableErr := f.AddTable(sheet, &excelize.Table{
-		Range:           fmt.Sprintf("A1:J%d", len(products)+1),
-		Name:            "ProdukTable",
-		StyleName:       "TableStyleMedium9",
-		ShowFirstColumn: false,
-		ShowLastColumn:  false,
-		// ShowRowStripes:    true,
+		Range:             fmt.Sprintf("A3:J%d", len(products)+3),
+		Name:              "ProdukTable",
+		StyleName:         "TableStyleMedium9",
+		ShowFirstColumn:   false,
+		ShowLastColumn:    false,
 		ShowColumnStripes: false,
 	})
 	if tableErr != nil {
-		log.Printf("WARNING: AddTable error (non-critical): %v", tableErr)
+		log.Printf("[ExportProductsToExcel] AddTable warning (non-critical): %v", tableErr)
 	}
 
 	// Return sebagai byte (siap dikirim ke browser)
 	buf, err := f.WriteToBuffer()
 	if err != nil {
-		log.Printf("ERROR ExportProductsToExcel: WriteToBuffer error: %v", err)
+		log.Printf("[ExportProductsToExcel] WriteToBuffer error: %v", err)
 		return nil, fmt.Errorf("failed to write excel: %w", err)
 	}
 
-	fileBytes := buf.Bytes()
-	log.Printf("DEBUG ExportProductsToExcel: File Excel berhasil dibuat, ukuran: %d bytes", len(fileBytes))
-
-	return fileBytes, nil
+	return buf.Bytes(), nil
 }
 
 // formatRupiah mengubah 4900 → "Rp. 4.900"

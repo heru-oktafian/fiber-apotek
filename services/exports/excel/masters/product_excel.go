@@ -17,32 +17,37 @@ func NewProductHandler(excelService *export_services.ExcelService) *ProductHandl
 	return &ProductHandler{excelService: excelService}
 }
 
-// ExportExcel → Export ke Excel menggunakan Fiber
+// ExportExcel → Export produk ke file Excel
 func (h *ProductHandler) ExportExcel(c *fiber.Ctx) error {
-	// Ambil branch_id dari JWT middleware kamu (biasanya disimpan di Locals)
+	// Ambil branch_id dari JWT middleware
 	branchID, _ := services.GetBranchID(c)
-	log.Printf("DEBUG: Export dimulai untuk branch_id: %s", branchID)
+
+	if branchID == "" {
+		log.Println("[ExportExcel] ERROR: branch_id kosong")
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "branch_id tidak ditemukan",
+		})
+	}
 
 	excelBytes, err := h.excelService.ExportProductsToExcel(branchID)
 	if err != nil {
-		log.Printf("ERROR: %v", err)
+		log.Printf("[ExportExcel] ERROR: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": fmt.Sprintf("gagal generate excel: %v", err),
 		})
 	}
 
-	// Debug: Cek ukuran bytes yang dikembalikan
-	log.Printf("DEBUG: Ukuran excel bytes: %d bytes", len(excelBytes))
-
-	// Cek apakah bytes kosong (kalau gak ada data)
 	if len(excelBytes) == 0 {
-		log.Println("ERROR: Excel bytes kosong - mungkin ada issue di service")
+		log.Println("[ExportExcel] ERROR: Excel bytes kosong")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "gagal generate file excel - bytes kosong",
 		})
 	}
 
+	// Set response headers untuk file download
 	c.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Set("Content-Disposition", `attachment; filename="produk.xlsx"`)
+	c.Set("Content-Length", fmt.Sprintf("%d", len(excelBytes)))
+
 	return c.Send(excelBytes)
 }
