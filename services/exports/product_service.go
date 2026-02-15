@@ -30,7 +30,7 @@ func (s *ExcelService) ExportProductsToExcel(branchID string) ([]byte, error) {
 		`).
 		Joins("LEFT JOIN units ON units.id = products.unit_id").
 		Joins("LEFT JOIN product_categories ON product_categories.id = products.product_category_id").
-		Where("products.branch_id = ?", branchID).
+		//Where("products.branch_id = ?", branchID).
 		Order("products.name ASC").
 		Find(&products).Error
 

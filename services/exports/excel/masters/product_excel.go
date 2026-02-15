@@ -2,10 +2,10 @@ package excels
 
 import (
 	fmt "fmt"
-	"log"
+	log "log"
 
 	fiber "github.com/gofiber/fiber/v2"
-	"github.com/heru-oktafian/fiber-apotek/services"
+	services "github.com/heru-oktafian/fiber-apotek/services"
 	export_services "github.com/heru-oktafian/fiber-apotek/services/exports"
 )
 
