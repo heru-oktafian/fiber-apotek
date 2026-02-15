@@ -22,7 +22,7 @@ func (s *ExcelService) ExportProductsToExcel(branchID string) ([]byte, error) {
 	var products []models.ProductDetail
 
 	// Query dengan join agar dapat UnitName (kalau ProductDetail kamu sudah include, bisa di-skip join-nya)
-	err := s.db.Model(&models.Product{}).
+	err := s.db.Debug().Model(&models.Product{}).
 		Select(`
 			products.*,
 			units.name as unit_name,
