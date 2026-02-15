@@ -96,12 +96,11 @@ func AssetCounter(db *gorm.DB) error {
 		vQtyDays := stats.QtyDays
 		vSumAssetDays := stats.SumAssetDays
 
+		// Hitung asset_average: (total final_asset bulan ini + finalAsset sekarang) / (qty records bulan ini + 1)
 		var assetAverage int
-		if vQtyDays > 0 {
-			assetAverage = vSumAssetDays / vQtyDays
-		} else {
-			assetAverage = 0
-		}
+		totalAssetWithCurrent := vSumAssetDays + finalAsset
+		totalRecordsWithCurrent := vQtyDays + 1
+		assetAverage = totalAssetWithCurrent / totalRecordsWithCurrent
 
 		dailyAsset := models.DailyAsset{
 			ID:           helpers.GenerateID("AST"),
