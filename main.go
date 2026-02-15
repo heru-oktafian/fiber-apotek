@@ -97,6 +97,7 @@ func main() {
 	routes.TransPurchaseRoutes(app)
 	routes.TransSaleRoutes(app)
 	routes.TransSaleReturnRoutes(app)
+	routes.ExportExcelRoutes(app)
 
 	// Hitung total rute
 	routeCount := 0
