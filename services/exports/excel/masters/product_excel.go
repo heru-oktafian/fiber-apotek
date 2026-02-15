@@ -4,6 +4,7 @@ import (
 	fmt "fmt"
 
 	fiber "github.com/gofiber/fiber/v2"
+	"github.com/heru-oktafian/fiber-apotek/services"
 	export_services "github.com/heru-oktafian/fiber-apotek/services/exports"
 )
 
@@ -18,13 +19,7 @@ func NewProductHandler(excelService *export_services.ExcelService) *ProductHandl
 // ExportExcel → Export ke Excel menggunakan Fiber
 func (h *ProductHandler) ExportExcel(c *fiber.Ctx) error {
 	// Ambil branch_id dari JWT middleware kamu (biasanya disimpan di Locals)
-	branchID, ok := c.Locals("branch_id").(string)
-	if !ok || branchID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "branch_id tidak ditemukan di context",
-		})
-	}
-
+	branchID, _ := services.GetBranchID(c)
 	excelBytes, err := h.excelService.ExportProductsToExcel(branchID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
