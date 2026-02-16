@@ -64,7 +64,7 @@ func GetAllAssets(c *fiber.Ctx) error {
 	var total int64
 
 	query := configs.DB.Table("daily_assets ast").
-		Select("ast.id, ast.asset_date, ast.asset_value, ast.branch_id, bc.branch_name").
+		Select("ast.id, ast.asset_date, ast.asset_value, ast.asset_average, ast.branch_id, bc.branch_name").
 		Joins("LEFT JOIN branches bc on bc.id = ast.branch_id").
 		Where("ast.branch_id = ? ", branchID).
 		Order("ast.asset_date DESC")
