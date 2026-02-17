@@ -9,16 +9,16 @@ import (
 	export_services "github.com/heru-oktafian/fiber-apotek/services/exports"
 )
 
-type ProductHandler struct {
-	excelService *export_services.ExcelService
+type ExcelProductHandler struct {
+	excelService *export_services.ExportServices
 }
 
-func NewProductHandler(excelService *export_services.ExcelService) *ProductHandler {
-	return &ProductHandler{excelService: excelService}
+func NewExcelProductHandler(excelService *export_services.ExportServices) *ExcelProductHandler {
+	return &ExcelProductHandler{excelService: excelService}
 }
 
 // ExportExcel → Export produk ke file Excel
-func (h *ProductHandler) ExportExcel(c *fiber.Ctx) error {
+func (h *ExcelProductHandler) ExportExcel(c *fiber.Ctx) error {
 	// Ambil branch_id dari JWT middleware
 	branchID, _ := services.GetBranchID(c)
 

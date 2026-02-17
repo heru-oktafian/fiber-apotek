@@ -7,19 +7,10 @@ import (
 
 	"github.com/heru-oktafian/fiber-apotek/models"
 	"github.com/xuri/excelize/v2"
-	"gorm.io/gorm"
 )
 
-type ExcelService struct {
-	db *gorm.DB
-}
-
-func NewExcelService(db *gorm.DB) *ExcelService {
-	return &ExcelService{db: db}
-}
-
 // ExportProductsToExcel menghasilkan file Excel dengan data produk per branch
-func (s *ExcelService) ExportProductsToExcel(branchID string) ([]byte, error) {
+func (s *ExportServices) ExportProductsToExcel(branchID string) ([]byte, error) {
 	var products []models.ProductDetail
 
 	// Query dengan join agar dapat UnitName dan ProductCategoryName

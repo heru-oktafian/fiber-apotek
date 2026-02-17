@@ -9,9 +9,7 @@ import (
 func SysSupplierCatRoute(app *fiber.App) {
 	// Supplier Category routes
 	app.Get("/api/supplier-categories", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetAllSupplierCategory)
-	app.Get("/api/supplier-categories/:id", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetSupplierCategoryByID)
-	app.Post("/api/supplier-categories", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "superadmin"), controllers.CreateSupplierCategory)
-	app.Put("/api/supplier-categories/:id", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "superadmin"), controllers.UpdateSupplierCategory)
+
 	app.Delete("/api/supplier-categories/:id", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "superadmin"), controllers.DeleteSupplierCategory)
 
 	// Supplier Category Combobox route

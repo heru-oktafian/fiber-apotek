@@ -74,6 +74,7 @@ func main() {
 	// Setup rute
 	routes.AuthRoutes(app)
 	routes.ExportExcelRoutes(app) // ✅ Harus sebelum MasterProductRoute agar tidak ter-match oleh :id pattern
+	routes.ExportPDFRoutes(app)
 	routes.SysBranchRoutes(app)
 	routes.AudFirstStockRoutes(app)
 	routes.MasterProductCatRoute(app)
