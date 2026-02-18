@@ -68,6 +68,8 @@ func SetupDB() (err error) {
 		&models.Member{},
 		&models.SupplierCategory{},
 		&models.Supplier{},
+		&models.DuplicateReceipts{},
+		&models.DuplicateReceiptItems{},
 		&models.Sales{},
 		&models.SaleItems{},
 		&models.SaleReturns{},
@@ -85,6 +87,8 @@ func SetupDB() (err error) {
 		&models.TransactionReports{},
 		&models.DailyProfitReport{},
 		&models.DailyAsset{},
+		&models.Defectas{},
+		&models.DefectaItems{},
 	)
 
 	if err != nil {

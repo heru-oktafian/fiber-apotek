@@ -9,6 +9,9 @@ import (
 	export_services "github.com/heru-oktafian/fiber-apotek/services/exports"
 	excel_audits "github.com/heru-oktafian/fiber-apotek/services/exports/excel/audits"
 	excel_masters "github.com/heru-oktafian/fiber-apotek/services/exports/excel/masters"
+	excel_reports "github.com/heru-oktafian/fiber-apotek/services/exports/excel/reports"
+	excel_systems "github.com/heru-oktafian/fiber-apotek/services/exports/excel/systems"
+	excel_transactions "github.com/heru-oktafian/fiber-apotek/services/exports/excel/transactions"
 )
 
 func ExportExcelRoutes(app *fiber.App) {
@@ -27,6 +30,22 @@ func ExportExcelRoutes(app *fiber.App) {
 	excelFirstStockHandler := excel_audits.NewExcelFirstStockHandler(excelService)
 	excelOpnameHandler := excel_audits.NewExcelOpnameHandler(excelService)
 
+	// Transaction Handlers
+	excelPurchaseHandler := excel_transactions.NewExcelPurchaseHandler(excelService)
+	excelSaleHandler := excel_transactions.NewExcelSaleHandler(excelService)
+	excelDuplicateReceiptHandler := excel_transactions.NewExcelDuplicateReceiptHandler(excelService)
+	excelBuyReturnHandler := excel_transactions.NewExcelBuyReturnHandler(excelService)
+	excelSaleReturnHandler := excel_transactions.NewExcelSaleReturnHandler(excelService)
+	excelExpenseHandler := excel_transactions.NewExcelExpenseHandler(excelService)
+	excelAnotherIncomeHandler := excel_transactions.NewExcelAnotherIncomeHandler(excelService)
+
+	// Systems Handlers
+	excelDailyAssetHandler := excel_systems.NewExcelDailyAssetHandler(excelService)
+	excelDefectaHandler := excel_systems.NewExcelDefectaHandler(excelService)
+
+	// Reports Handlers
+	excelNeracaSaldoHandler := excel_reports.NewExcelNeracaSaldoHandler(excelService)
+
 	// Protected routes: Export ke Excel
 	app.Get("/api/products/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelProductHandler.ExportExcel)
 	app.Get("/api/units/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelUnitHandler.ExportExcel)
@@ -38,6 +57,22 @@ func ExportExcelRoutes(app *fiber.App) {
 	app.Get("/api/members/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelMemberHandler.ExportExcel)
 	app.Get("/api/first-stocks/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelFirstStockHandler.ExportExcel)
 	app.Get("/api/opnames/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelOpnameHandler.ExportExcel)
+
+	// Transaction Routes
+	app.Get("/api/purchases/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelPurchaseHandler.ExportExcel)
+	app.Get("/api/sales/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelSaleHandler.ExportExcel)
+	app.Get("/api/duplicate-receipts/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelDuplicateReceiptHandler.ExportExcel)
+	app.Get("/api/buy-returns/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelBuyReturnHandler.ExportExcel)
+	app.Get("/api/sale-returns/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelSaleReturnHandler.ExportExcel)
+	app.Get("/api/expenses/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelExpenseHandler.ExportExcel)
+	app.Get("/api/another-incomes/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelAnotherIncomeHandler.ExportExcel)
+
+	// Systems Routes
+	app.Get("/api/daily-assets/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelDailyAssetHandler.ExportExcel)
+	app.Get("/api/defectas/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelDefectaHandler.ExportExcel)
+
+	// Reports Routes
+	app.Get("/api/reports/neraca-saldo/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelNeracaSaldoHandler.ExportExcel)
 
 	log.Println("[Route] ExportExcelRoutes initialized successfully!")
 }

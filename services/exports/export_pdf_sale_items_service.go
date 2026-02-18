@@ -3,7 +3,6 @@ package services
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/heru-oktafian/fiber-apotek/models"
 	"github.com/johnfercher/maroto/v2"
@@ -16,28 +15,30 @@ import (
 	"github.com/johnfercher/maroto/v2/pkg/props"
 )
 
-func (s *ExportServices) ExportFirstStocksToPDF(branchID string, month string) ([]byte, error) {
-	var firstStocks []models.FirstStocks
+func (s *ExportServices) ExportSaleItemsToPDF(branchID string, saleID string) ([]byte, error) {
+	var items []models.AllSaleItems
 
-	query := s.db.Where("branch_id = ?", branchID)
+	// Query data sale items - Perlu join product kemudian join unit (karena unit ada di product)
+	query := s.db.Table("sale_items").
+		Select("sale_items.id, sale_items.sale_id, sale_items.product_id, products.name as product_name, sale_items.price, sale_items.qty, units.name as unit_name, sale_items.sub_total").
+		Joins("JOIN products ON products.id = sale_items.product_id").
+		Joins("JOIN units ON units.id = products.unit_id").
+		Where("sale_items.sale_id = ?", saleID)
 
-	// Filter by month if provided (format: YYYY-MM)
-	if month != "" {
-		parsedTime, err := time.Parse("2006-01", month)
-		if err == nil {
-			startDate := parsedTime
-			endDate := parsedTime.AddDate(0, 1, 0)
-			query = query.Where("first_stock_date >= ? AND first_stock_date < ?", startDate, endDate)
-		}
-	}
-
-	err := query.Order("first_stock_date DESC").Find(&firstStocks).Error
+	err := query.Order("products.name ASC").Find(&items).Error
 	if err != nil {
-		log.Printf("[ExportFirstStocksToPDF] Query error: %v", err)
-		return nil, fmt.Errorf("failed to fetch first stocks: %w", err)
+		log.Printf("[ExportSaleItemsToPDF] Query error: %v", err)
+		return nil, fmt.Errorf("failed to fetch sale items: %w", err)
 	}
 
-	// Konfigurasi PDF dengan landscape orientation
+	// Ambil header info
+	var sale models.Sales
+	if err := s.db.Where("id = ? AND branch_id = ?", saleID, branchID).First(&sale).Error; err != nil {
+		log.Printf("[ExportSaleItemsToPDF] Sale not found or mismatch branch: %v", err)
+		return nil, fmt.Errorf("sale not found or access denied")
+	}
+
+	// Konfigurasi PDF
 	cfg := config.NewBuilder().
 		WithPageNumber().
 		WithOrientation(orientation.Horizontal).
@@ -53,7 +54,7 @@ func (s *ExportServices) ExportFirstStocksToPDF(branchID string, month string) (
 	m.AddRows(
 		row.New(9).Add(
 			col.New(12).Add(
-				text.New(fmt.Sprintf("STOK AWAL %s", month), props.Text{
+				text.New(fmt.Sprintf("ID PENJUALAN : %s", sale.ID), props.Text{
 					Size:  14,
 					Align: "center",
 					Color: &props.Color{Red: 18, Green: 104, Blue: 202},
@@ -61,31 +62,33 @@ func (s *ExportServices) ExportFirstStocksToPDF(branchID string, month string) (
 				}),
 			),
 		),
+		row.New(6).Add(
+			col.New(12).Add(
+				text.New(fmt.Sprintf("TANGGAL : %s | METODE PEMBAYARAN : %s", sale.SaleDate.Format("02/01/2006"), sale.Payment), props.Text{
+					Size:  10,
+					Align: "center",
+				}),
+			),
+		),
 	)
 
 	// === TABLE HEADERS ===
 	headerRowContent := row.New(8).Add(
-		col.New(2).WithStyle(headerCell()).Add(text.New("ID", headerTextProps())),
-		col.New(6).WithStyle(headerCell()).Add(text.New("DESKRIPSI", headerTextProps())),
-		col.New(2).WithStyle(headerCell()).Add(text.New("TANGGAL", headerTextProps())),
-		col.New(2).WithStyle(headerCell()).Add(text.New("TOTAL", headerTextProps())),
+		col.New(6).WithStyle(headerCell()).Add(text.New("PRODUK", headerTextProps())),
+		col.New(2).WithStyle(headerCell()).Add(text.New("HARGA", headerTextProps())),
+		col.New(2).WithStyle(headerCell()).Add(text.New("JUMLAH", headerTextProps())),
+		col.New(2).WithStyle(headerCell()).Add(text.New("SUB TOTAL", headerTextProps())),
 	)
 	m.AddRows(headerRowContent)
 
 	// === TABLE DATA ROWS ===
-	const rowsPerPageFirst = 21 // Baris per halaman untuk halaman pertama
-	const rowsPerPageOther = 22 // Baris per halaman untuk halaman lainnya
+	const rowsPerPageFirst = 18
+	const rowsPerPageOther = 22
 
 	rowCounter := 0
 	isFirstPage := true
 
-	// Hitung total dari semua TotalFirstStock
-	var grandTotal int
-	for _, fs := range firstStocks {
-		grandTotal += fs.TotalFirstStock
-	}
-
-	for i, fs := range firstStocks {
+	for i, item := range items {
 		var maxRowsThisPage int
 		if isFirstPage {
 			maxRowsThisPage = rowsPerPageFirst
@@ -93,7 +96,6 @@ func (s *ExportServices) ExportFirstStocksToPDF(branchID string, month string) (
 			maxRowsThisPage = rowsPerPageOther
 		}
 
-		// Tambah header baru jika sudah mencapai batas halaman
 		if rowCounter > 0 && rowCounter >= maxRowsThisPage {
 			m.AddRows(headerRowContent)
 			rowCounter = 0
@@ -103,7 +105,6 @@ func (s *ExportServices) ExportFirstStocksToPDF(branchID string, month string) (
 		var cellStyle *props.Cell
 		var textProps props.Text
 
-		// Alternating row colors
 		if i%2 == 0 {
 			cellStyle = dataCellWhite()
 			textProps = dataPropsWhite()
@@ -114,10 +115,10 @@ func (s *ExportServices) ExportFirstStocksToPDF(branchID string, month string) (
 
 		m.AddRows(
 			row.New(8).Add(
-				col.New(2).WithStyle(cellStyle).Add(text.New(fs.ID, textProps)),
-				col.New(6).WithStyle(cellStyle).Add(text.New(fs.Description, textProps)),
-				col.New(2).WithStyle(cellStyle).Add(text.New(fs.FirstStockDate.Format("02/01/2006"), textProps)),
-				col.New(2).WithStyle(cellStyle).Add(text.New(formatRupiah(fs.TotalFirstStock), textProps)),
+				col.New(6).WithStyle(cellStyle).Add(text.New(item.ProductName, textProps)),
+				col.New(2).WithStyle(cellStyle).Add(text.New(formatRupiah(item.Price), textProps)),
+				col.New(2).WithStyle(cellStyle).Add(text.New(fmt.Sprintf("%d %s", item.Qty, item.UnitName), textProps)),
+				col.New(2).WithStyle(cellStyle).Add(text.New(formatRupiah(item.SubTotal), textProps)),
 			),
 		)
 
@@ -145,14 +146,14 @@ func (s *ExportServices) ExportFirstStocksToPDF(branchID string, month string) (
 	m.AddRows(
 		row.New(8).Add(
 			col.New(10).WithStyle(totalCellStyle).Add(text.New("TOTAL", totalTextProps)),
-			col.New(2).WithStyle(totalCellStyle).Add(text.New(formatRupiah(grandTotal), totalValueProps)),
+			col.New(2).WithStyle(totalCellStyle).Add(text.New(formatRupiah(sale.TotalSale), totalValueProps)),
 		),
 	)
 
 	// Get PDF bytes
 	document, err := m.Generate()
 	if err != nil {
-		log.Printf("[ExportFirstStocksToPDF] Generate error: %v", err)
+		log.Printf("[ExportSaleItemsToPDF] Generate error: %v", err)
 		return nil, fmt.Errorf("failed to generate pdf: %w", err)
 	}
 

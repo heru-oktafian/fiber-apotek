@@ -1,0 +1,183 @@
+package services
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/heru-oktafian/fiber-apotek/models"
+	"github.com/xuri/excelize/v2"
+)
+
+func (s *ExportServices) ExportNeracaSaldoToExcel(branchID string, month string) ([]byte, error) {
+	// Konversi bulan ke rentang tanggal
+	var startDate, endDate time.Time
+	var err error
+	if month != "" {
+		startDate, err = time.Parse("2006-01", month)
+		if err != nil {
+			return nil, fmt.Errorf("invalid month format: %w", err)
+		}
+		endDate = startDate.AddDate(0, 1, 0)
+	}
+
+	type Summary struct {
+		TransactionType string
+		TransactionDate string
+		Total           int
+	}
+
+	var summaries []Summary
+
+	query := s.db.Table("transaction_reports").
+		Select("transaction_type, DATE(created_at) AS transaction_date, SUM(total) AS total").
+		Where("branch_id = ? AND payment != 'paid_by_credit'", branchID).
+		Group("transaction_type, DATE(created_at)").
+		Order("transaction_date ASC")
+
+	if month != "" {
+		query = query.Where("created_at >= ? AND created_at < ?", startDate, endDate)
+	}
+
+	if err := query.Scan(&summaries).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch transaction summaries: %w", err)
+	}
+
+	f := excelize.NewFile()
+	sheet := "Neraca Saldo"
+	f.SetSheetName("Sheet1", sheet)
+
+	// === ROW 1: JUDUL ===
+	f.SetCellValue(sheet, "A1", "NERACA SALDO "+month)
+	titleStyle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Size: 14, Color: "#FFFFFF"},
+		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
+		Alignment: &excelize.Alignment{Horizontal: "left", Vertical: "center"},
+	})
+	f.SetCellStyle(sheet, "A1", "E1", titleStyle)
+	f.SetRowHeight(sheet, 1, 25)
+
+	// Setup Styles
+	headerStyle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Color: "#FFFFFF"},
+		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+		Border: []excelize.Border{
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+		},
+	})
+	styleCenter, _ := f.NewStyle(&excelize.Style{
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+	})
+	styleLeft, _ := f.NewStyle(&excelize.Style{
+		Alignment: &excelize.Alignment{Horizontal: "left", Vertical: "center"},
+	})
+	styleRight, _ := f.NewStyle(&excelize.Style{
+		Alignment: &excelize.Alignment{Horizontal: "right", Vertical: "center"},
+	})
+	grandTotalStyle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Color: "#FFFFFF", Size: 11},
+		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
+		Alignment: &excelize.Alignment{Horizontal: "right", Vertical: "center"},
+	})
+
+	// Separate Debit and Credit
+	var debitRows, creditRows []Summary
+	var totalDebit, totalCredit int
+	for _, s := range summaries {
+		switch s.TransactionType {
+		case string(models.Sale), string(models.Income), string(models.BuyReturn):
+			debitRows = append(debitRows, s)
+			totalDebit += s.Total
+		case string(models.Purchase), string(models.Expense), string(models.SaleReturn):
+			creditRows = append(creditRows, s)
+			totalCredit += s.Total
+		}
+	}
+
+	currentRow := 3
+	// --- DEBIT SECTION ---
+	f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), "BAGIAN DEBIT (PENDAPATAN / RETUR BELI)")
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("E%d", currentRow), headerStyle)
+	currentRow++
+
+	headers := []string{"TANGGAL", "TIPE TRANSAKSI", "TOTAL", "", ""}
+	for i, h := range headers[:3] {
+		cell, _ := excelize.ColumnNumberToName(i + 1)
+		f.SetCellValue(sheet, cell+fmt.Sprintf("%d", currentRow), h)
+	}
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("C%d", currentRow), headerStyle)
+	currentRow++
+
+	for _, d := range debitRows {
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), d.TransactionDate)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", currentRow), d.TransactionType)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", currentRow), formatRupiah(d.Total))
+
+		f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("A%d", currentRow), styleCenter)
+		f.SetCellStyle(sheet, fmt.Sprintf("B%d", currentRow), fmt.Sprintf("B%d", currentRow), styleLeft)
+		f.SetCellStyle(sheet, fmt.Sprintf("C%d", currentRow), fmt.Sprintf("C%d", currentRow), styleRight)
+		currentRow++
+	}
+	f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), "TOTAL DEBIT")
+	f.MergeCell(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("B%d", currentRow))
+	f.SetCellValue(sheet, fmt.Sprintf("C%d", currentRow), formatRupiah(totalDebit))
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("C%d", currentRow), grandTotalStyle)
+
+	currentRow += 2
+
+	// --- CREDIT SECTION ---
+	f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), "BAGIAN KREDIT (PENGELUARAN / PEMBELIAN / RETUR JUAL)")
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("E%d", currentRow), headerStyle)
+	currentRow++
+
+	for i, h := range headers[:3] {
+		cell, _ := excelize.ColumnNumberToName(i + 1)
+		f.SetCellValue(sheet, cell+fmt.Sprintf("%d", currentRow), h)
+	}
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("C%d", currentRow), headerStyle)
+	currentRow++
+
+	for _, c := range creditRows {
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), c.TransactionDate)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", currentRow), c.TransactionType)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", currentRow), formatRupiah(c.Total))
+
+		f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("A%d", currentRow), styleCenter)
+		f.SetCellStyle(sheet, fmt.Sprintf("B%d", currentRow), fmt.Sprintf("B%d", currentRow), styleLeft)
+		f.SetCellStyle(sheet, fmt.Sprintf("C%d", currentRow), fmt.Sprintf("C%d", currentRow), styleRight)
+		currentRow++
+	}
+	f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), "TOTAL KREDIT")
+	f.MergeCell(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("B%d", currentRow))
+	f.SetCellValue(sheet, fmt.Sprintf("C%d", currentRow), formatRupiah(totalCredit))
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("C%d", currentRow), grandTotalStyle)
+
+	currentRow += 2
+
+	// --- SUMMARY SECTION ---
+	f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), "RINGKASAN AKHIR")
+	f.MergeCell(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("B%d", currentRow))
+	f.SetCellValue(sheet, fmt.Sprintf("C%d", currentRow), formatRupiah(totalDebit-totalCredit))
+
+	summaryStyle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Size: 12, Color: "#FFFFFF"},
+		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#2E7D32"}, Pattern: 1}, // Green for summary
+		Alignment: &excelize.Alignment{Horizontal: "right", Vertical: "center"},
+	})
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("C%d", currentRow), summaryStyle)
+	f.SetRowHeight(sheet, currentRow, 25)
+
+	f.SetColWidth(sheet, "A", "A", 20)
+	f.SetColWidth(sheet, "B", "B", 30)
+	f.SetColWidth(sheet, "C", "C", 20)
+
+	buf, err := f.WriteToBuffer()
+	if err != nil {
+		return nil, fmt.Errorf("failed to write excel: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}

@@ -16,8 +16,8 @@ import (
 	"github.com/johnfercher/maroto/v2/pkg/props"
 )
 
-func (s *ExportServices) ExportOpnamesToPDF(branchID string, month string) ([]byte, error) {
-	var opnames []models.Opnames
+func (s *ExportServices) ExportAnotherIncomesToPDF(branchID string, month string) ([]byte, error) {
+	var anotherIncomes []models.AnotherIncomes
 
 	query := s.db.Where("branch_id = ?", branchID)
 
@@ -27,14 +27,14 @@ func (s *ExportServices) ExportOpnamesToPDF(branchID string, month string) ([]by
 		if err == nil {
 			startDate := parsedTime
 			endDate := parsedTime.AddDate(0, 1, 0)
-			query = query.Where("opname_date >= ? AND opname_date < ?", startDate, endDate)
+			query = query.Where("income_date >= ? AND income_date < ?", startDate, endDate)
 		}
 	}
 
-	err := query.Order("opname_date DESC").Find(&opnames).Error
+	err := query.Order("income_date DESC").Find(&anotherIncomes).Error
 	if err != nil {
-		log.Printf("[ExportOpnamesToPDF] Query error: %v", err)
-		return nil, fmt.Errorf("failed to fetch opnames: %w", err)
+		log.Printf("[ExportAnotherIncomesToPDF] Query error: %v", err)
+		return nil, fmt.Errorf("failed to fetch another incomes: %w", err)
 	}
 
 	// Konfigurasi PDF dengan landscape orientation
@@ -53,7 +53,7 @@ func (s *ExportServices) ExportOpnamesToPDF(branchID string, month string) ([]by
 	m.AddRows(
 		row.New(9).Add(
 			col.New(12).Add(
-				text.New("MASTER OPNAMES", props.Text{
+				text.New(fmt.Sprintf("PENDAPATAN LAIN %s", month), props.Text{
 					Size:  14,
 					Align: "center",
 					Color: &props.Color{Red: 18, Green: 104, Blue: 202},
@@ -66,9 +66,8 @@ func (s *ExportServices) ExportOpnamesToPDF(branchID string, month string) ([]by
 	// === TABLE HEADERS ===
 	headerRowContent := row.New(8).Add(
 		col.New(2).WithStyle(headerCell()).Add(text.New("ID", headerTextProps())),
-		col.New(3).WithStyle(headerCell()).Add(text.New("DESCRIPTION", headerTextProps())),
-		col.New(2).WithStyle(headerCell()).Add(text.New("DATE", headerTextProps())),
-		col.New(2).WithStyle(headerCell()).Add(text.New("STATUS", headerTextProps())),
+		col.New(6).WithStyle(headerCell()).Add(text.New("DESKRIPSI", headerTextProps())),
+		col.New(2).WithStyle(headerCell()).Add(text.New("TANGGAL", headerTextProps())),
 		col.New(2).WithStyle(headerCell()).Add(text.New("TOTAL", headerTextProps())),
 	)
 	m.AddRows(headerRowContent)
@@ -80,7 +79,13 @@ func (s *ExportServices) ExportOpnamesToPDF(branchID string, month string) ([]by
 	rowCounter := 0
 	isFirstPage := true
 
-	for i, opname := range opnames {
+	// Hitung total dari semua TotalIncome
+	var grandTotal int
+	for _, ai := range anotherIncomes {
+		grandTotal += ai.TotalIncome
+	}
+
+	for i, ai := range anotherIncomes {
 		var maxRowsThisPage int
 		if isFirstPage {
 			maxRowsThisPage = rowsPerPageFirst
@@ -109,21 +114,45 @@ func (s *ExportServices) ExportOpnamesToPDF(branchID string, month string) ([]by
 
 		m.AddRows(
 			row.New(8).Add(
-				col.New(2).WithStyle(cellStyle).Add(text.New(opname.ID, textProps)),
-				col.New(3).WithStyle(cellStyle).Add(text.New(opname.Description, textProps)),
-				col.New(2).WithStyle(cellStyle).Add(text.New(opname.OpnameDate.Format("02/01/2006"), textProps)),
-				col.New(2).WithStyle(cellStyle).Add(text.New(string(opname.OpnameStatus), textProps)),
-				col.New(2).WithStyle(cellStyle).Add(text.New(formatRupiah(opname.TotalOpname), textProps)),
+				col.New(2).WithStyle(cellStyle).Add(text.New(ai.ID, textProps)),
+				col.New(6).WithStyle(cellStyle).Add(text.New(ai.Description, textProps)),
+				col.New(2).WithStyle(cellStyle).Add(text.New(ai.IncomeDate.Format("02/01/2006"), textProps)),
+				col.New(2).WithStyle(cellStyle).Add(text.New(formatRupiah(ai.TotalIncome), textProps)),
 			),
 		)
 
 		rowCounter++
 	}
 
+	// === BARIS TOTAL ===
+	// Style untuk baris total (background biru, text putih, bold)
+	totalCellStyle := &props.Cell{
+		BackgroundColor: &props.Color{Red: 18, Green: 104, Blue: 202},
+	}
+	totalTextProps := props.Text{
+		Size:  10,
+		Style: fontstyle.Bold,
+		Color: &props.Color{Red: 255, Green: 255, Blue: 255}, // Putih
+		Align: "center",
+	}
+	totalValueProps := props.Text{
+		Size:  10,
+		Style: fontstyle.Bold,
+		Color: &props.Color{Red: 255, Green: 255, Blue: 255}, // Putih
+		Align: "right",
+	}
+
+	m.AddRows(
+		row.New(8).Add(
+			col.New(10).WithStyle(totalCellStyle).Add(text.New("TOTAL", totalTextProps)),
+			col.New(2).WithStyle(totalCellStyle).Add(text.New(formatRupiah(grandTotal), totalValueProps)),
+		),
+	)
+
 	// Get PDF bytes
 	document, err := m.Generate()
 	if err != nil {
-		log.Printf("[ExportOpnamesToPDF] Generate error: %v", err)
+		log.Printf("[ExportAnotherIncomesToPDF] Generate error: %v", err)
 		return nil, fmt.Errorf("failed to generate pdf: %w", err)
 	}
 

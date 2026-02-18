@@ -32,8 +32,8 @@ func (h *PdfOpnameHandler) ExportPDF(c *fiber.Ctx) error {
 	}
 
 	// Generate filename dengan timestamp: opnames-YYYY-MM-DD-HH-MM-SS.pdf
-	timestamp := time.Now().Format("2006-01-02-15-04-05")
-	filename := fmt.Sprintf("opnames-%s.pdf", timestamp)
+	timestamp := time.Now().Format("2006-01-02-15:04:05")
+	filename := fmt.Sprintf("OPNAME-%s.pdf", timestamp)
 
 	c.Set("Content-Type", "application/pdf")
 	c.Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))

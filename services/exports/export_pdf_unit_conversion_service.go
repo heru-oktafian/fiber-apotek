@@ -15,9 +15,18 @@ import (
 )
 
 func (s *ExportServices) ExportUnitConversionsToPDF(branchID string) ([]byte, error) {
-	var conversions []models.UnitConversion
+	var conversions []models.UnitConversionDetail
 
-	err := s.db.Where("branch_id = ?", branchID).Order("id ASC").Find(&conversions).Error
+	// Query dengan join untuk mendapatkan nama unit dan produk
+	err := s.db.Table("unit_conversions").
+		Select("unit_conversions.id, unit_conversions.value_conv, unit_conversions.branch_id, units_init.name as init_name, units_final.name as final_name, products.name as product_name").
+		Joins("LEFT JOIN units AS units_init ON units_init.id = unit_conversions.init_id").
+		Joins("LEFT JOIN units AS units_final ON units_final.id = unit_conversions.final_id").
+		Joins("LEFT JOIN products ON products.id = unit_conversions.product_id").
+		Where("unit_conversions.branch_id = ?", branchID).
+		Order("unit_conversions.id ASC").
+		Find(&conversions).Error
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch unit conversions: %w", err)
 	}
@@ -50,7 +59,7 @@ func (s *ExportServices) ExportUnitConversionsToPDF(branchID string) ([]byte, er
 		col.New(3).WithStyle(headerCell()).Add(text.New("INIT UNIT", headerTextProps())),
 		col.New(3).WithStyle(headerCell()).Add(text.New("FINAL UNIT", headerTextProps())),
 		col.New(3).WithStyle(headerCell()).Add(text.New("VALUE CONV", headerTextProps())),
-		col.New(3).WithStyle(headerCell()).Add(text.New("PRODUCT ID", headerTextProps())),
+		col.New(3).WithStyle(headerCell()).Add(text.New("PRODUCT", headerTextProps())),
 	)
 	m.AddRows(headerRowContent)
 
@@ -87,10 +96,10 @@ func (s *ExportServices) ExportUnitConversionsToPDF(branchID string) ([]byte, er
 
 		m.AddRows(
 			row.New(8).Add(
-				col.New(3).WithStyle(cellStyle).Add(text.New(conv.InitId, textProps)),
-				col.New(3).WithStyle(cellStyle).Add(text.New(conv.FinalId, textProps)),
+				col.New(3).WithStyle(cellStyle).Add(text.New(conv.InitName, textProps)),
+				col.New(3).WithStyle(cellStyle).Add(text.New(conv.FinalName, textProps)),
 				col.New(3).WithStyle(cellStyle).Add(text.New(fmt.Sprintf("%d", conv.ValueConv), textProps)),
-				col.New(3).WithStyle(cellStyle).Add(text.New(conv.ProductId, textProps)),
+				col.New(3).WithStyle(cellStyle).Add(text.New(conv.ProductName, textProps)),
 			),
 		)
 		rowCounter++

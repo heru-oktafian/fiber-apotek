@@ -404,6 +404,7 @@ func GetOpnameWithItems(c *fiber.Ctx) error {
 // CreateOpnameItem Function
 func CreateOpnameItem(c *fiber.Ctx) error {
 	db := configs.DB
+	opnameID := c.Params("id")
 	var input models.CreateOpnameItemInput
 
 	if err := c.BodyParser(&input); err != nil {
@@ -413,6 +414,7 @@ func CreateOpnameItem(c *fiber.Ctx) error {
 	// Ambil branch ID dan user ID dari token
 	branchID, _ := services.GetBranchID(c)
 	userID, _ := services.GetUserID(c)
+	input.OpnameId = opnameID
 
 	// Ambil data produk untuk mendapatkan price, stock, dan purchase_price
 	var product models.Product
@@ -429,6 +431,10 @@ func CreateOpnameItem(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, http.StatusBadRequest, "Format tanggal tidak valid. Gunakan YYYY-MM-DD", err)
 	}
 
+	// PENTING: Simpan stock LAMA sebelum update
+	oldStock := product.Stock
+	oldPurchasePrice := product.PurchasePrice
+
 	// Update expired date dan stock produk sesuai inputan
 	if err := db.Model(&product).Updates(map[string]interface{}{
 		"expired_date": parsedDate,
@@ -442,10 +448,10 @@ func CreateOpnameItem(c *fiber.Ctx) error {
 	opnameItem.ProductId = input.ProductId
 	opnameItem.Qty = input.Qty
 	opnameItem.ExpiredDate = parsedDate
-	opnameItem.Price = product.PurchasePrice
-	opnameItem.QtyExist = product.Stock
-	opnameItem.SubTotalExist = product.Stock * product.PurchasePrice
-	opnameItem.SubTotal = opnameItem.Qty * product.PurchasePrice
+	opnameItem.Price = oldPurchasePrice
+	opnameItem.QtyExist = oldStock                         // Gunakan stock LAMA
+	opnameItem.SubTotalExist = oldStock * oldPurchasePrice // Gunakan stock LAMA
+	opnameItem.SubTotal = opnameItem.Qty * opnameItem.Price
 
 	var existingItem models.OpnameItems
 	err = db.Where("opname_id = ? AND product_id = ?", opnameItem.OpnameId, opnameItem.ProductId).First(&existingItem).Error

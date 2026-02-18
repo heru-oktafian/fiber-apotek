@@ -3,38 +3,37 @@ package services
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/heru-oktafian/fiber-apotek/models"
 	"github.com/xuri/excelize/v2"
 )
 
-func (s *ExportServices) ExportFirstStocksToExcel(branchID string, month string) ([]byte, error) {
-	var firstStocks []models.FirstStocks
+func (s *ExportServices) ExportSalesToExcel(branchID string, month string) ([]byte, error) {
+	var sales []models.Sales
 
 	query := s.db.Where("branch_id = ?", branchID)
 
-	// Filter by month if provided (format: YYYY-MM)
 	if month != "" {
 		parsedTime, err := time.Parse("2006-01", month)
 		if err == nil {
 			startDate := parsedTime
 			endDate := parsedTime.AddDate(0, 1, 0)
-			query = query.Where("first_stock_date >= ? AND first_stock_date < ?", startDate, endDate)
+			query = query.Where("sale_date >= ? AND sale_date < ?", startDate, endDate)
 		}
 	}
 
-	err := query.Order("first_stock_date DESC").Find(&firstStocks).Error
+	err := query.Order("sale_date DESC").Find(&sales).Error
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch first stocks: %w", err)
+		return nil, fmt.Errorf("failed to fetch sales: %w", err)
 	}
 
 	f := excelize.NewFile()
-	sheet := "First Stocks"
+	sheet := "Sales"
 	f.SetSheetName("Sheet1", sheet)
 
-	// === ROW 1: JUDUL ===
-	f.SetCellValue(sheet, "A1", "STOK AWAL "+month)
+	f.SetCellValue(sheet, "A1", "PENJUALAN "+month)
 	titleStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Size: 14, Color: "#FFFFFF"},
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
@@ -43,17 +42,12 @@ func (s *ExportServices) ExportFirstStocksToExcel(branchID string, month string)
 	f.SetCellStyle(sheet, "A1", "E1", titleStyle)
 	f.SetRowHeight(sheet, 1, 25)
 
-	// === ROW 2: JARAK (kosong) ===
-	// (tidak perlu action, biarkan kosong)
-
-	// === ROW 3: HEADER ===
 	headers := []string{"ID", "KETERANGAN", "TANGGAL", "PEMBAYARAN", "TOTAL"}
 	for i, h := range headers {
 		cell, _ := excelize.ColumnNumberToName(i + 1)
 		f.SetCellValue(sheet, cell+"3", h)
 	}
 
-	// Style Header
 	headerStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Color: "#FFFFFF"},
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
@@ -67,47 +61,59 @@ func (s *ExportServices) ExportFirstStocksToExcel(branchID string, month string)
 	})
 	f.SetCellStyle(sheet, "A3", "E3", headerStyle)
 
-	// === STYLE PER KOLOM DATA ===
-	// Kolom A (ID): Rata Tengah
 	styleCenter, _ := f.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
 	})
-	// Kolom B (KETERANGAN): Rata Kiri
 	styleLeft, _ := f.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{Horizontal: "left", Vertical: "center"},
 	})
-	// Kolom C (TANGGAL) & D (PEMBAYARAN): Rata Tengah — gunakan styleCenter
-	// Kolom E (TOTAL): Rata Kanan
 	styleRight, _ := f.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{Horizontal: "right", Vertical: "center"},
 	})
 
-	// === ROW 4+: DATA ===
 	var grandTotal int
-	for i, fs := range firstStocks {
+	for i, sale := range sales {
 		row := i + 4
-		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), fs.ID)
-		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), fs.Description)
-		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), fs.FirstStockDate.Format("02/01/2006"))
-		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), string(fs.Payment))
-		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), formatRupiah(fs.TotalFirstStock))
-		grandTotal += fs.TotalFirstStock
 
-		// Terapkan alignment per kolom
-		f.SetCellStyle(sheet, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), styleCenter) // ID: center
-		f.SetCellStyle(sheet, fmt.Sprintf("B%d", row), fmt.Sprintf("B%d", row), styleLeft)   // KETERANGAN: left
-		f.SetCellStyle(sheet, fmt.Sprintf("C%d", row), fmt.Sprintf("C%d", row), styleCenter) // TANGGAL: center
-		f.SetCellStyle(sheet, fmt.Sprintf("D%d", row), fmt.Sprintf("D%d", row), styleCenter) // PEMBAYARAN: center
-		f.SetCellStyle(sheet, fmt.Sprintf("E%d", row), fmt.Sprintf("E%d", row), styleRight)  // TOTAL: right
+		// Logika KETERANGAN: Ambil nama item (seperti di GetAllSalesDetail)
+		var itemNames []string
+		if err := s.db.Table("sale_items sit").
+			Select("pro.name").
+			Joins("LEFT JOIN products pro ON pro.id = sit.product_id").
+			Where("sit.sale_id = ?", sale.ID).
+			Order("pro.name ASC").
+			Pluck("pro.name", &itemNames).Error; err != nil {
+			log.Printf("[ExportSalesToExcel] Failed to fetch item names for %s: %v", sale.ID, err)
+		}
+
+		descItems := strings.Join(itemNames, ", ")
+		dateWith7 := sale.SaleDate.Add(7 * time.Hour).Format("02-01-2006 15:04")
+		var description string
+		if descItems != "" {
+			description = descItems + " ; " + dateWith7
+		} else {
+			description = dateWith7
+		}
+
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), sale.ID)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), description)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), sale.SaleDate.Format("02/01/2006"))
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), string(sale.Payment))
+		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), formatRupiah(sale.TotalSale))
+		grandTotal += sale.TotalSale
+
+		f.SetCellStyle(sheet, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), styleCenter)
+		f.SetCellStyle(sheet, fmt.Sprintf("B%d", row), fmt.Sprintf("B%d", row), styleLeft)
+		f.SetCellStyle(sheet, fmt.Sprintf("C%d", row), fmt.Sprintf("C%d", row), styleCenter)
+		f.SetCellStyle(sheet, fmt.Sprintf("D%d", row), fmt.Sprintf("D%d", row), styleCenter)
+		f.SetCellStyle(sheet, fmt.Sprintf("E%d", row), fmt.Sprintf("E%d", row), styleRight)
 	}
 
-	// === BARIS GRAND TOTAL ===
-	totalRow := len(firstStocks) + 4
+	totalRow := len(sales) + 4
 	f.SetCellValue(sheet, fmt.Sprintf("A%d", totalRow), "GRAND TOTAL")
 	f.MergeCell(sheet, fmt.Sprintf("A%d", totalRow), fmt.Sprintf("D%d", totalRow))
 	f.SetCellValue(sheet, fmt.Sprintf("E%d", totalRow), formatRupiah(grandTotal))
 
-	// Style untuk baris GRAND TOTAL
 	grandTotalStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Color: "#FFFFFF", Size: 11},
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
@@ -122,17 +128,16 @@ func (s *ExportServices) ExportFirstStocksToExcel(branchID string, month string)
 	f.SetColWidth(sheet, "D", "D", 18)
 	f.SetColWidth(sheet, "E", "E", 18)
 
-	// Buat Table (range tidak mencakup baris GRAND TOTAL)
 	tableErr := f.AddTable(sheet, &excelize.Table{
-		Range:             fmt.Sprintf("A3:E%d", len(firstStocks)+3),
-		Name:              "FirstStocksTable",
+		Range:             fmt.Sprintf("A3:E%d", len(sales)+3),
+		Name:              "SalesTable",
 		StyleName:         "TableStyleMedium9",
 		ShowFirstColumn:   false,
 		ShowLastColumn:    false,
 		ShowColumnStripes: false,
 	})
 	if tableErr != nil {
-		log.Printf("[ExportFirstStocksToExcel] AddTable warning: %v", tableErr)
+		log.Printf("[ExportSalesToExcel] AddTable warning: %v", tableErr)
 	}
 
 	buf, err := f.WriteToBuffer()

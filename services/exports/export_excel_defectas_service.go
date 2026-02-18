@@ -9,40 +9,41 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-func (s *ExportServices) ExportOpnamesToExcel(branchID string, month string) ([]byte, error) {
-	var opnames []models.Opnames
+func (s *ExportServices) ExportDefectasToExcel(branchID string, month string) ([]byte, error) {
+	var defectas []models.Defectas
 
 	query := s.db.Where("branch_id = ?", branchID)
 
-	// Filter by month if provided (format: YYYY-MM)
 	if month != "" {
 		parsedTime, err := time.Parse("2006-01", month)
 		if err == nil {
 			startDate := parsedTime
 			endDate := parsedTime.AddDate(0, 1, 0)
-			query = query.Where("opname_date >= ? AND opname_date < ?", startDate, endDate)
+			query = query.Where("defecta_date >= ? AND defecta_date < ?", startDate, endDate)
 		}
 	}
 
-	err := query.Order("opname_date DESC").Find(&opnames).Error
+	err := query.Order("defecta_date DESC").Find(&defectas).Error
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch opnames: %w", err)
+		return nil, fmt.Errorf("failed to fetch defectas: %w", err)
 	}
 
 	f := excelize.NewFile()
-	sheet := "Opnames"
+	sheet := "Defectas"
 	f.SetSheetName("Sheet1", sheet)
 
-	f.SetCellValue(sheet, "A1", "STOK OPNAMES "+month)
+	// === ROW 1: JUDUL ===
+	f.SetCellValue(sheet, "A1", "LAPORAN DEFECTA "+month)
 	titleStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Size: 14, Color: "#FFFFFF"},
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
 		Alignment: &excelize.Alignment{Horizontal: "left", Vertical: "center"},
 	})
-	f.SetCellStyle(sheet, "A1", "E1", titleStyle)
+	f.SetCellStyle(sheet, "A1", "D1", titleStyle)
 	f.SetRowHeight(sheet, 1, 25)
 
-	headers := []string{"ID", "KETERANGAN", "TANGGAL", "STATUS", "TOTAL"}
+	// === ROW 3: HEADER ===
+	headers := []string{"ID", "TANGGAL", "STATUS", "ESTIMASI TOTAL"}
 	for i, h := range headers {
 		cell, _ := excelize.ColumnNumberToName(i + 1)
 		f.SetCellValue(sheet, cell+"3", h)
@@ -59,64 +60,60 @@ func (s *ExportServices) ExportOpnamesToExcel(branchID string, month string) ([]
 			{Type: "right", Color: "000000", Style: 1},
 		},
 	})
-	f.SetCellStyle(sheet, "A3", "E3", headerStyle)
+	f.SetCellStyle(sheet, "A3", "D3", headerStyle)
 
 	styleCenter, _ := f.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
-	})
-	styleLeft, _ := f.NewStyle(&excelize.Style{
-		Alignment: &excelize.Alignment{Horizontal: "left", Vertical: "center"},
 	})
 	styleRight, _ := f.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{Horizontal: "right", Vertical: "center"},
 	})
 
-	var grandTotal int
-	for i, opname := range opnames {
+	// === ROW 4+: DATA ===
+	var totalEstimate int
+	for i, d := range defectas {
 		row := i + 4
-		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), opname.ID)
-		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), opname.Description)
-		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), opname.OpnameDate.Format("02/01/2006"))
-		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), string(opname.OpnameStatus))
-		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), formatRupiah(opname.TotalOpname))
-		grandTotal += opname.TotalOpname
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), d.ID)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), d.DefectaDate.Format("02/01/2006"))
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), string(d.DefectaStatus))
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), formatRupiah(d.TotalEstimate))
+		totalEstimate += d.TotalEstimate
 
 		f.SetCellStyle(sheet, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), styleCenter)
-		f.SetCellStyle(sheet, fmt.Sprintf("B%d", row), fmt.Sprintf("B%d", row), styleLeft)
+		f.SetCellStyle(sheet, fmt.Sprintf("B%d", row), fmt.Sprintf("B%d", row), styleCenter)
 		f.SetCellStyle(sheet, fmt.Sprintf("C%d", row), fmt.Sprintf("C%d", row), styleCenter)
-		f.SetCellStyle(sheet, fmt.Sprintf("D%d", row), fmt.Sprintf("D%d", row), styleCenter)
-		f.SetCellStyle(sheet, fmt.Sprintf("E%d", row), fmt.Sprintf("E%d", row), styleRight)
+		f.SetCellStyle(sheet, fmt.Sprintf("D%d", row), fmt.Sprintf("D%d", row), styleRight)
 	}
 
-	totalRow := len(opnames) + 4
+	// === BARIS GRAND TOTAL ===
+	totalRow := len(defectas) + 4
 	f.SetCellValue(sheet, fmt.Sprintf("A%d", totalRow), "GRAND TOTAL")
-	f.MergeCell(sheet, fmt.Sprintf("A%d", totalRow), fmt.Sprintf("D%d", totalRow))
-	f.SetCellValue(sheet, fmt.Sprintf("E%d", totalRow), formatRupiah(grandTotal))
+	f.MergeCell(sheet, fmt.Sprintf("A%d", totalRow), fmt.Sprintf("C%d", totalRow))
+	f.SetCellValue(sheet, fmt.Sprintf("D%d", totalRow), formatRupiah(totalEstimate))
 
 	grandTotalStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Color: "#FFFFFF", Size: 11},
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
 		Alignment: &excelize.Alignment{Horizontal: "right", Vertical: "center"},
 	})
-	f.SetCellStyle(sheet, fmt.Sprintf("A%d", totalRow), fmt.Sprintf("E%d", totalRow), grandTotalStyle)
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", totalRow), fmt.Sprintf("D%d", totalRow), grandTotalStyle)
 	f.SetRowHeight(sheet, totalRow, 20)
 
 	f.SetColWidth(sheet, "A", "A", 18)
-	f.SetColWidth(sheet, "B", "B", 40)
+	f.SetColWidth(sheet, "B", "B", 15)
 	f.SetColWidth(sheet, "C", "C", 15)
-	f.SetColWidth(sheet, "D", "D", 18)
-	f.SetColWidth(sheet, "E", "E", 18)
+	f.SetColWidth(sheet, "D", "D", 20)
 
 	tableErr := f.AddTable(sheet, &excelize.Table{
-		Range:             fmt.Sprintf("A3:E%d", len(opnames)+3),
-		Name:              "OpnamesTable",
+		Range:             fmt.Sprintf("A3:D%d", len(defectas)+3),
+		Name:              "DefectasTable",
 		StyleName:         "TableStyleMedium9",
 		ShowFirstColumn:   false,
 		ShowLastColumn:    false,
 		ShowColumnStripes: false,
 	})
 	if tableErr != nil {
-		log.Printf("[ExportOpnamesToExcel] AddTable warning: %v", tableErr)
+		log.Printf("[ExportDefectasToExcel] AddTable warning: %v", tableErr)
 	}
 
 	buf, err := f.WriteToBuffer()
