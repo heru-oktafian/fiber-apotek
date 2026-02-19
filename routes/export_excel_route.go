@@ -50,6 +50,8 @@ func ExportExcelRoutes(app *fiber.App) {
 	excelDailyAssetHandler := excel_systems.NewExcelDailyAssetHandler(excelService)
 	excelDefectaHandler := excel_systems.NewExcelDefectaHandler(excelService)
 	excelNearedReportHandler := excel_systems.NewExcelNearedReportHandler(excelService)
+	excelTopSellingHandler := excel_systems.NewExcelTopSellingHandler(excelService)
+	excelLeastSellingHandler := excel_systems.NewExcelLeastSellingHandler(excelService)
 
 	// Reports Handlers
 	excelNeracaSaldoHandler := excel_reports.NewExcelNeracaSaldoHandler(excelService)
@@ -86,6 +88,8 @@ func ExportExcelRoutes(app *fiber.App) {
 	app.Get("/api/daily-assets/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelDailyAssetHandler.ExportExcel)
 	app.Get("/api/defectas/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelDefectaHandler.ExportExcel)
 	app.Get("/api/dashboard/neared-report/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelNearedReportHandler.ExportExcel)
+	app.Get("/api/dashboard/top-selling-report/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelTopSellingHandler.ExportExcel)
+	app.Get("/api/dashboard/least-selling-report/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelLeastSellingHandler.ExportExcel)
 
 	// Reports Routes
 	app.Get("/api/reports/neraca-saldo/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelNeracaSaldoHandler.ExportExcel)
