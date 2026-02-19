@@ -46,8 +46,8 @@ func (s *ExportServices) ExportNearedReportToExcel(branchID string) ([]byte, err
 	sheet := "Near Expired"
 	f.SetSheetName("Sheet1", sheet)
 
-	// Title
-	f.SetCellValue(sheet, "A1", "LAPORAN PRODUK MENDEKATI KADALUARSA")
+	// Title (sertakan tanggal pembuatan laporan)
+	f.SetCellValue(sheet, "A1", fmt.Sprintf("LAPORAN PRODUK MENDEKATI KADALUARSA - %s", nowWIB.Format("2006-01-02")))
 	titleStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Size: 14, Color: "#FFFFFF"},
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
@@ -92,7 +92,8 @@ func (s *ExportServices) ExportNearedReportToExcel(branchID string) ([]byte, err
 		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), p.Name)
 		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), p.Stock)
 		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), p.Unit)
-		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), p.ExpiredDate.Format("2006-01-02"))
+		// Tampilkan tanggal kadaluarsa dalam format DD/MM/YYYY untuk tampilan lokal
+		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), p.ExpiredDate.Format("02/01/2006"))
 
 		f.SetCellStyle(sheet, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), styleCenter)
 		f.SetCellStyle(sheet, fmt.Sprintf("B%d", row), fmt.Sprintf("B%d", row), styleCenter)

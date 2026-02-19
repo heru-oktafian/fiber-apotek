@@ -27,7 +27,8 @@ func (h *ExcelNearedReportHandler) ExportExcel(c *fiber.Ctx) error {
 		})
 	}
 
-	timestamp := time.Now().Format("2006-01-02-15-04-05")
+	// Gunakan format tanggal YYYY-MM-DD untuk nama file agar konsisten dan mudah dibaca
+	timestamp := time.Now().Format("2006-01-02")
 	filename := fmt.Sprintf("neared-report-%s.xlsx", timestamp)
 
 	c.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
