@@ -83,96 +83,99 @@ func (s *ExportServices) ExportNeracaSaldoToExcel(branchID string, month string)
 		Alignment: &excelize.Alignment{Horizontal: "right", Vertical: "center"},
 	})
 
-	// Separate Debit and Credit
-	var debitRows, creditRows []Summary
+	// Separate Debit and Credit and build unified rows
+	var rows []struct {
+		TransactionType string
+		TransactionDate string
+		Debit           int
+		Credit          int
+	}
 	var totalDebit, totalCredit int
+
 	for _, s := range summaries {
+		r := struct {
+			TransactionType string
+			TransactionDate string
+			Debit           int
+			Credit          int
+		}{
+			TransactionType: s.TransactionType,
+			TransactionDate: s.TransactionDate,
+		}
 		switch s.TransactionType {
 		case string(models.Sale), string(models.Income), string(models.BuyReturn):
-			debitRows = append(debitRows, s)
+			r.Debit = s.Total
 			totalDebit += s.Total
 		case string(models.Purchase), string(models.Expense), string(models.SaleReturn):
-			creditRows = append(creditRows, s)
+			r.Credit = s.Total
 			totalCredit += s.Total
 		}
+		rows = append(rows, r)
 	}
 
 	currentRow := 3
-	// --- DEBIT SECTION ---
-	f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), "BAGIAN DEBIT (PENDAPATAN / RETUR BELI)")
-	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("E%d", currentRow), headerStyle)
-	currentRow++
-
-	headers := []string{"TANGGAL", "TIPE TRANSAKSI", "TOTAL", "", ""}
-	for i, h := range headers[:3] {
-		cell, _ := excelize.ColumnNumberToName(i + 1)
-		f.SetCellValue(sheet, cell+fmt.Sprintf("%d", currentRow), h)
-	}
-	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("C%d", currentRow), headerStyle)
-	currentRow++
-
-	for _, d := range debitRows {
-		f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), d.TransactionDate)
-		f.SetCellValue(sheet, fmt.Sprintf("B%d", currentRow), d.TransactionType)
-		f.SetCellValue(sheet, fmt.Sprintf("C%d", currentRow), formatRupiah(d.Total))
-
-		f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("A%d", currentRow), styleCenter)
-		f.SetCellStyle(sheet, fmt.Sprintf("B%d", currentRow), fmt.Sprintf("B%d", currentRow), styleLeft)
-		f.SetCellStyle(sheet, fmt.Sprintf("C%d", currentRow), fmt.Sprintf("C%d", currentRow), styleRight)
-		currentRow++
-	}
-	f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), "TOTAL DEBIT")
-	f.MergeCell(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("B%d", currentRow))
-	f.SetCellValue(sheet, fmt.Sprintf("C%d", currentRow), formatRupiah(totalDebit))
-	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("C%d", currentRow), grandTotalStyle)
-
+	// --- TOP SUMMARY TEXT ---
+	summaryText := fmt.Sprintf("Debit : %s   Kredit : %s   Sisa Estimasi Saldo : %s", formatRupiah(totalDebit), formatRupiah(totalCredit), formatRupiah(totalDebit-totalCredit))
+	f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), summaryText)
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("E%d", currentRow), styleLeft)
+	f.MergeCell(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("E%d", currentRow))
 	currentRow += 2
 
-	// --- CREDIT SECTION ---
-	f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), "BAGIAN KREDIT (PENGELUARAN / PEMBELIAN / RETUR JUAL)")
-	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("E%d", currentRow), headerStyle)
-	currentRow++
-
-	for i, h := range headers[:3] {
+	// --- TABLE HEADER ---
+	headers := []string{"No", "TANGGAL", "TRANSAKSI", "DEBET", "KREDIT"}
+	for i, h := range headers {
 		cell, _ := excelize.ColumnNumberToName(i + 1)
 		f.SetCellValue(sheet, cell+fmt.Sprintf("%d", currentRow), h)
 	}
-	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("C%d", currentRow), headerStyle)
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("E%d", currentRow), headerStyle)
 	currentRow++
 
-	for _, c := range creditRows {
-		f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), c.TransactionDate)
-		f.SetCellValue(sheet, fmt.Sprintf("B%d", currentRow), c.TransactionType)
-		f.SetCellValue(sheet, fmt.Sprintf("C%d", currentRow), formatRupiah(c.Total))
+	for idx, r := range rows {
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), idx+1)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", currentRow), r.TransactionDate)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", currentRow), r.TransactionType)
+		if r.Debit != 0 {
+			f.SetCellValue(sheet, fmt.Sprintf("D%d", currentRow), formatRupiah(r.Debit))
+		}
+		if r.Credit != 0 {
+			f.SetCellValue(sheet, fmt.Sprintf("E%d", currentRow), formatRupiah(r.Credit))
+		}
 
 		f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("A%d", currentRow), styleCenter)
-		f.SetCellStyle(sheet, fmt.Sprintf("B%d", currentRow), fmt.Sprintf("B%d", currentRow), styleLeft)
-		f.SetCellStyle(sheet, fmt.Sprintf("C%d", currentRow), fmt.Sprintf("C%d", currentRow), styleRight)
+		f.SetCellStyle(sheet, fmt.Sprintf("B%d", currentRow), fmt.Sprintf("B%d", currentRow), styleCenter)
+		f.SetCellStyle(sheet, fmt.Sprintf("C%d", currentRow), fmt.Sprintf("C%d", currentRow), styleLeft)
+		f.SetCellStyle(sheet, fmt.Sprintf("D%d", currentRow), fmt.Sprintf("D%d", currentRow), styleRight)
+		f.SetCellStyle(sheet, fmt.Sprintf("E%d", currentRow), fmt.Sprintf("E%d", currentRow), styleRight)
 		currentRow++
 	}
-	f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), "TOTAL KREDIT")
-	f.MergeCell(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("B%d", currentRow))
-	f.SetCellValue(sheet, fmt.Sprintf("C%d", currentRow), formatRupiah(totalCredit))
-	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("C%d", currentRow), grandTotalStyle)
+
+	// --- GRAND TOTAL ROW ---
+	f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), "TOTAL")
+	f.MergeCell(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("C%d", currentRow))
+	f.SetCellValue(sheet, fmt.Sprintf("D%d", currentRow), formatRupiah(totalDebit))
+	f.SetCellValue(sheet, fmt.Sprintf("E%d", currentRow), formatRupiah(totalCredit))
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("E%d", currentRow), grandTotalStyle)
 
 	currentRow += 2
 
 	// --- SUMMARY SECTION ---
 	f.SetCellValue(sheet, fmt.Sprintf("A%d", currentRow), "RINGKASAN AKHIR")
-	f.MergeCell(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("B%d", currentRow))
-	f.SetCellValue(sheet, fmt.Sprintf("C%d", currentRow), formatRupiah(totalDebit-totalCredit))
+	f.MergeCell(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("C%d", currentRow))
+	f.SetCellValue(sheet, fmt.Sprintf("D%d", currentRow), formatRupiah(totalDebit-totalCredit))
 
 	summaryStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Size: 12, Color: "#FFFFFF"},
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#2E7D32"}, Pattern: 1}, // Green for summary
 		Alignment: &excelize.Alignment{Horizontal: "right", Vertical: "center"},
 	})
-	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("C%d", currentRow), summaryStyle)
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("D%d", currentRow), summaryStyle)
 	f.SetRowHeight(sheet, currentRow, 25)
 
 	f.SetColWidth(sheet, "A", "A", 20)
 	f.SetColWidth(sheet, "B", "B", 30)
 	f.SetColWidth(sheet, "C", "C", 20)
+	f.SetColWidth(sheet, "D", "D", 20)
+	f.SetColWidth(sheet, "E", "E", 20)
 
 	buf, err := f.WriteToBuffer()
 	if err != nil {
