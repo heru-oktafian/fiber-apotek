@@ -37,10 +37,10 @@ func (s *ExportServices) ExportTopSellingToExcel(branchID string) ([]byte, error
 	}
 
 	f := excelize.NewFile()
-	sheet := "Top Selling"
+	sheet := "Fast Moving"
 	f.SetSheetName("Sheet1", sheet)
 
-	f.SetCellValue(sheet, "A1", fmt.Sprintf("LAPORAN TOP SELLING - %s", now.Format("2006-01-02")))
+	f.SetCellValue(sheet, "A1", fmt.Sprintf("PRODUK FAST MOVING - %s", now.Format("2006-01-02")))
 	titleStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Size: 14, Color: "#FFFFFF"},
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
