@@ -124,16 +124,19 @@ func (s *ExportServices) ExportNearedReportToExcel(branchID string) ([]byte, err
 	f.SetColWidth(sheet, "E", "E", 15)
 	f.SetColWidth(sheet, "F", "F", 18)
 
-	tableErr := f.AddTable(sheet, &excelize.Table{
-		Range:             fmt.Sprintf("A3:F%d", len(rawProducts)+3),
-		Name:              "NearedReportTable",
-		StyleName:         "TableStyleMedium9",
-		ShowFirstColumn:   false,
-		ShowLastColumn:    false,
-		ShowColumnStripes: false,
-	})
-	if tableErr != nil {
-		log.Printf("[ExportNearedReportToExcel] AddTable warning: %v", tableErr)
+	// Tambahkan Excel table hanya jika ada minimal 1 baris data.
+	if len(rawProducts) > 0 {
+		tableErr := f.AddTable(sheet, &excelize.Table{
+			Range:             fmt.Sprintf("A3:F%d", len(rawProducts)+3),
+			Name:              "NearedReportTable",
+			StyleName:         "TableStyleMedium9",
+			ShowFirstColumn:   false,
+			ShowLastColumn:    false,
+			ShowColumnStripes: false,
+		})
+		if tableErr != nil {
+			log.Printf("[ExportNearedReportToExcel] AddTable warning: %v", tableErr)
+		}
 	}
 
 	buf, err := f.WriteToBuffer()
