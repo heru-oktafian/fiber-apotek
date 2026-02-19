@@ -49,6 +49,7 @@ func ExportExcelRoutes(app *fiber.App) {
 	// Systems Handlers
 	excelDailyAssetHandler := excel_systems.NewExcelDailyAssetHandler(excelService)
 	excelDefectaHandler := excel_systems.NewExcelDefectaHandler(excelService)
+	excelNearedReportHandler := excel_systems.NewExcelNearedReportHandler(excelService)
 
 	// Reports Handlers
 	excelNeracaSaldoHandler := excel_reports.NewExcelNeracaSaldoHandler(excelService)
@@ -84,6 +85,7 @@ func ExportExcelRoutes(app *fiber.App) {
 	// Systems Routes
 	app.Get("/api/daily-assets/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelDailyAssetHandler.ExportExcel)
 	app.Get("/api/defectas/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelDefectaHandler.ExportExcel)
+	app.Get("/api/dashboard/neared-report/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelNearedReportHandler.ExportExcel)
 
 	// Reports Routes
 	app.Get("/api/reports/neraca-saldo/excel", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), excelNeracaSaldoHandler.ExportExcel)
