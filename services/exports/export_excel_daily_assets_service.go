@@ -33,13 +33,14 @@ func (s *ExportServices) ExportDailyAssetsToExcel(branchID string, month string)
 	f.SetSheetName("Sheet1", sheet)
 
 	// === ROW 1: JUDUL ===
-	f.SetCellValue(sheet, "A1", "ASET HARIAN "+month)
+	f.SetCellValue(sheet, "A1", "LAPORAN ASET "+month)
 	titleStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Size: 14, Color: "#FFFFFF"},
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
-		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+		Alignment: &excelize.Alignment{Horizontal: "left", Vertical: "center"},
 	})
 	f.SetCellStyle(sheet, "A1", "C1", titleStyle)
+	f.MergeCell(sheet, "A1", "C1")
 	f.SetRowHeight(sheet, 1, 25)
 
 	// === ROW 3: HEADER ===
