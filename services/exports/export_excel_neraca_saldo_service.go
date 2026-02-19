@@ -51,9 +51,11 @@ func (s *ExportServices) ExportNeracaSaldoToExcel(branchID string, month string)
 	titleStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Size: 14, Color: "#FFFFFF"},
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
-		Alignment: &excelize.Alignment{Horizontal: "left", Vertical: "center"},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
 	})
+
 	f.SetCellStyle(sheet, "A1", "E1", titleStyle)
+	f.MergeCell(sheet, "A1", "E1")
 	f.SetRowHeight(sheet, 1, 25)
 
 	// Setup Styles
