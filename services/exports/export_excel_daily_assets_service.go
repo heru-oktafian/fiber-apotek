@@ -37,13 +37,13 @@ func (s *ExportServices) ExportDailyAssetsToExcel(branchID string, month string)
 	titleStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Size: 14, Color: "#FFFFFF"},
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
-		Alignment: &excelize.Alignment{Horizontal: "left", Vertical: "center"},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
 	})
-	f.SetCellStyle(sheet, "A1", "D1", titleStyle)
+	f.SetCellStyle(sheet, "A1", "C1", titleStyle)
 	f.SetRowHeight(sheet, 1, 25)
 
 	// === ROW 3: HEADER ===
-	headers := []string{"ID", "TANGGAL", "NILAI ASET", "RATA-RATA ASET"}
+	headers := []string{"ID", "TANGGAL", "NILAI ASET"}
 	for i, h := range headers {
 		cell, _ := excelize.ColumnNumberToName(i + 1)
 		f.SetCellValue(sheet, cell+"3", h)
@@ -60,7 +60,7 @@ func (s *ExportServices) ExportDailyAssetsToExcel(branchID string, month string)
 			{Type: "right", Color: "000000", Style: 1},
 		},
 	})
-	f.SetCellStyle(sheet, "A3", "D3", headerStyle)
+	f.SetCellStyle(sheet, "A3", "C3", headerStyle)
 
 	styleCenter, _ := f.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
@@ -70,19 +70,17 @@ func (s *ExportServices) ExportDailyAssetsToExcel(branchID string, month string)
 	})
 
 	// === ROW 4+: DATA ===
-	var totalAssetValue int
+	// var totalAssetValue int
 	for i, a := range assets {
 		row := i + 4
 		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), a.ID)
 		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), a.AssetDate.Format("02/01/2006"))
 		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), formatRupiah(a.AssetValue))
-		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), formatRupiah(a.AssetAverage))
-		totalAssetValue += a.AssetValue
+		// totalAssetValue += a.AssetValue
 
 		f.SetCellStyle(sheet, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), styleCenter)
 		f.SetCellStyle(sheet, fmt.Sprintf("B%d", row), fmt.Sprintf("B%d", row), styleCenter)
 		f.SetCellStyle(sheet, fmt.Sprintf("C%d", row), fmt.Sprintf("C%d", row), styleRight)
-		f.SetCellStyle(sheet, fmt.Sprintf("D%d", row), fmt.Sprintf("D%d", row), styleRight)
 	}
 
 	// === BARIS ASET TERBARU ===
@@ -103,16 +101,15 @@ func (s *ExportServices) ExportDailyAssetsToExcel(branchID string, month string)
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
 		Alignment: &excelize.Alignment{Horizontal: "right", Vertical: "center"},
 	})
-	f.SetCellStyle(sheet, fmt.Sprintf("A%d", totalRow), fmt.Sprintf("D%d", totalRow), grandTotalStyle)
+	f.SetCellStyle(sheet, fmt.Sprintf("A%d", totalRow), fmt.Sprintf("C%d", totalRow), grandTotalStyle)
 	f.SetRowHeight(sheet, totalRow, 20)
 
 	f.SetColWidth(sheet, "A", "A", 18)
 	f.SetColWidth(sheet, "B", "B", 15)
 	f.SetColWidth(sheet, "C", "C", 20)
-	f.SetColWidth(sheet, "D", "D", 20)
 
 	tableErr := f.AddTable(sheet, &excelize.Table{
-		Range:             fmt.Sprintf("A3:D%d", len(assets)+3),
+		Range:             fmt.Sprintf("A3:C%d", len(assets)+3),
 		Name:              "DailyAssetsTable",
 		StyleName:         "TableStyleMedium9",
 		ShowFirstColumn:   false,
