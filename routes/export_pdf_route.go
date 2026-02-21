@@ -45,8 +45,10 @@ func ExportPDFRoutes(app *fiber.App) {
 	pdfDuplicateReceiptHandler := pdf_transactions.NewPdfDuplicateReceiptHandler(pdfService)
 	pdfExpenseHandler := pdf_transactions.NewPdfExpenseHandler(pdfService)
 	pdfAnotherIncomeHandler := pdf_transactions.NewPdfAnotherIncomeHandler(pdfService)
+	pdfProductLabelHandler := pdf_masters.NewPdfProductLabelHandler(pdfService)
 
 	// Protected routes untuk export PDF
+	app.Get("/api/product-label/:id", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), pdfProductLabelHandler.ExportPDF)
 	app.Get("/api/products/pdf", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), pdfProductHandler.ExportPDF)
 	app.Get("/api/units/pdf", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), pdfUnitHandler.ExportPDF)
 	app.Get("/api/product-categories/pdf", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), pdfProductCategoryHandler.ExportPDF)
