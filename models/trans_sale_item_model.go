@@ -33,6 +33,7 @@ type SaleItemResponse struct {
 	Discount       int         `json:"discount"`
 	ProfitEstimate int         `json:"profit_estimate"`
 	Payment        string      `json:"payment"`
+	Cashier        string      `json:"cashier"`
 	Items          interface{} `json:"items"` // Items bisa berupa []models.AllSaleItems
 }
 

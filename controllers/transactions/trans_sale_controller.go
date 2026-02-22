@@ -861,6 +861,7 @@ func GetSaleWithItems(c *fiber.Ctx) error {
 		Discount:       sale.Discount,
 		ProfitEstimate: sale.ProfitEstimate,
 		Payment:        string(sale.Payment),
+		Cashier:        sale.Cashier,
 		Items:          items,
 	}
 
