@@ -42,7 +42,7 @@ func (s *ExportServices) ExportSalesToExcel(branchID string, month string) ([]by
 	f.SetCellStyle(sheet, "A1", "E1", titleStyle)
 	f.SetRowHeight(sheet, 1, 25)
 
-	headers := []string{"ID", "KETERANGAN", "TANGGAL", "PEMBAYARAN", "TOTAL"}
+	headers := []string{"ID", "KETERANGAN", "TANGGAL", "PEMBAYARAN", "SALES", "MARGIN"}
 	for i, h := range headers {
 		cell, _ := excelize.ColumnNumberToName(i + 1)
 		f.SetCellValue(sheet, cell+"3", h)
@@ -72,6 +72,7 @@ func (s *ExportServices) ExportSalesToExcel(branchID string, month string) ([]by
 	})
 
 	var grandTotal int
+	var grandMargin int
 	for i, sale := range sales {
 		row := i + 4
 
@@ -100,19 +101,23 @@ func (s *ExportServices) ExportSalesToExcel(branchID string, month string) ([]by
 		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), sale.SaleDate.Format("02/01/2006"))
 		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), string(sale.Payment))
 		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), formatRupiah(sale.TotalSale))
+		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), formatRupiah(sale.ProfitEstimate))
 		grandTotal += sale.TotalSale
+		grandMargin += sale.ProfitEstimate
 
 		f.SetCellStyle(sheet, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), styleCenter)
 		f.SetCellStyle(sheet, fmt.Sprintf("B%d", row), fmt.Sprintf("B%d", row), styleLeft)
 		f.SetCellStyle(sheet, fmt.Sprintf("C%d", row), fmt.Sprintf("C%d", row), styleCenter)
 		f.SetCellStyle(sheet, fmt.Sprintf("D%d", row), fmt.Sprintf("D%d", row), styleCenter)
 		f.SetCellStyle(sheet, fmt.Sprintf("E%d", row), fmt.Sprintf("E%d", row), styleRight)
+		f.SetCellStyle(sheet, fmt.Sprintf("F%d", row), fmt.Sprintf("F%d", row), styleRight)
 	}
 
 	totalRow := len(sales) + 4
 	f.SetCellValue(sheet, fmt.Sprintf("A%d", totalRow), "GRAND TOTAL")
 	f.MergeCell(sheet, fmt.Sprintf("A%d", totalRow), fmt.Sprintf("D%d", totalRow))
 	f.SetCellValue(sheet, fmt.Sprintf("E%d", totalRow), formatRupiah(grandTotal))
+	f.SetCellValue(sheet, fmt.Sprintf("F%d", totalRow), formatRupiah(grandMargin))
 
 	grandTotalStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Color: "#FFFFFF", Size: 11},
@@ -127,9 +132,10 @@ func (s *ExportServices) ExportSalesToExcel(branchID string, month string) ([]by
 	f.SetColWidth(sheet, "C", "C", 15)
 	f.SetColWidth(sheet, "D", "D", 18)
 	f.SetColWidth(sheet, "E", "E", 18)
+	f.SetColWidth(sheet, "F", "F", 18)
 
 	tableErr := f.AddTable(sheet, &excelize.Table{
-		Range:             fmt.Sprintf("A3:E%d", len(sales)+3),
+		Range:             fmt.Sprintf("A3:F%d", len(sales)+3),
 		Name:              "SalesTable",
 		StyleName:         "TableStyleMedium9",
 		ShowFirstColumn:   false,
