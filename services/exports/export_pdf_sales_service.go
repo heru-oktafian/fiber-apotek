@@ -147,12 +147,12 @@ func (s *ExportServices) ExportSalesToPDF(branchID string, month string) ([]byte
 
 		m.AddRows(
 			row.New(8).Add(
-				col.New(2).WithStyle(cellStyle).Add(text.New(sale.ID, textPropsLeft)),
-				col.New(4).WithStyle(cellStyle).Add(text.New(description, textPropsLeft)),
+				col.New(2).WithStyle(cellStyle).Add(text.New(sale.ID, textPropsCenter)),
+				col.New(4).WithStyle(cellStyle).Add(text.New(description, textPropsCenter)),
 				col.New(2).WithStyle(cellStyle).Add(text.New(sale.SaleDate.Format("02/01/2006"), textPropsCenter)),
 				col.New(2).WithStyle(cellStyle).Add(text.New(string(sale.Payment), textPropsCenter)),
-				col.New(1).WithStyle(cellStyle).Add(text.New(formatRupiah(sale.TotalSale), textPropsRight)),
-				col.New(1).WithStyle(cellStyle).Add(text.New(formatRupiah(sale.ProfitEstimate), textPropsRight)),
+				col.New(1).WithStyle(cellStyle).Add(text.New(formatRupiah(sale.TotalSale), textPropsCenter)),
+				col.New(1).WithStyle(cellStyle).Add(text.New(formatRupiah(sale.ProfitEstimate), textPropsCenter)),
 			),
 		)
 
@@ -168,20 +168,18 @@ func (s *ExportServices) ExportSalesToPDF(branchID string, month string) ([]byte
 		Size:  10,
 		Style: fontstyle.Bold,
 		Color: &props.Color{Red: 255, Green: 255, Blue: 255}, // Putih
-		Align: align.Right,
+		Align: align.Center,
 	}
 	totalValueProps := props.Text{
 		Size:  10,
 		Style: fontstyle.Bold,
 		Color: &props.Color{Red: 255, Green: 255, Blue: 255}, // Putih
-		Align: align.Right,
+		Align: align.Center,
 	}
 
 	m.AddRows(
 		row.New(8).Add(
-			col.New(8).WithStyle(totalCellStyle).Add(text.New("GRAND TOTAL", totalTextProps)),
-			col.New(1).WithStyle(totalCellStyle).Add(text.New("", totalTextProps)),
-			col.New(1).WithStyle(totalCellStyle).Add(text.New("", totalTextProps)),
+			col.New(10).WithStyle(totalCellStyle).Add(text.New("GRAND TOTAL", totalTextProps)),
 			col.New(1).WithStyle(totalCellStyle).Add(text.New(formatRupiah(grandTotal), totalValueProps)),
 			col.New(1).WithStyle(totalCellStyle).Add(text.New(formatRupiah(grandMargin), totalValueProps)),
 		),
