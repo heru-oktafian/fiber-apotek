@@ -172,6 +172,11 @@ func CreateDefectaItem(c *fiber.Ctx) error {
 			return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to update defecta item", nil)
 		}
 
+		// Update total_estimate
+		var totalEstimate int
+		db.Table("defecta_items").Where("defecta_id = ?", existingItem.DefectaId).Select("COALESCE(SUM(sub_total), 0)").Row().Scan(&totalEstimate)
+		db.Table("defectas").Where("id = ?", existingItem.DefectaId).Update("total_estimate", totalEstimate)
+
 		defectaItem := existingItem
 		return helpers.JSONResponse(c, fiber.StatusOK, "Defecta item updated successfully", defectaItem)
 	}
@@ -191,6 +196,11 @@ func CreateDefectaItem(c *fiber.Ctx) error {
 	if err := db.Create(&defectaItem).Error; err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to create defecta item", nil)
 	}
+
+	// Update total_estimate
+	var totalEstimate int
+	db.Table("defecta_items").Where("defecta_id = ?", defectaItem.DefectaId).Select("COALESCE(SUM(sub_total), 0)").Row().Scan(&totalEstimate)
+	db.Table("defectas").Where("id = ?", defectaItem.DefectaId).Update("total_estimate", totalEstimate)
 
 	return helpers.JSONResponse(c, fiber.StatusOK, "Defecta item created successfully", defectaItem)
 }
@@ -227,6 +237,11 @@ func UpdateDefectaItem(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to update defecta item", nil)
 	}
 
+	// Update total_estimate
+	var totalEstimate int
+	db.Table("defecta_items").Where("defecta_id = ?", defectaItem.DefectaId).Select("COALESCE(SUM(sub_total), 0)").Row().Scan(&totalEstimate)
+	db.Table("defectas").Where("id = ?", defectaItem.DefectaId).Update("total_estimate", totalEstimate)
+
 	// Kembalikan respons sukses
 	return helpers.JSONResponse(c, fiber.StatusOK, "Defecta item updated successfully", defectaItem)
 }
@@ -246,6 +261,11 @@ func DeleteDefectaItem(c *fiber.Ctx) error {
 	if err := db.Delete(&defectaItem).Error; err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to delete defecta item", nil)
 	}
+
+	// Update total_estimate
+	var totalEstimate int
+	db.Table("defecta_items").Where("defecta_id = ?", defectaItem.DefectaId).Select("COALESCE(SUM(sub_total), 0)").Row().Scan(&totalEstimate)
+	db.Table("defectas").Where("id = ?", defectaItem.DefectaId).Update("total_estimate", totalEstimate)
 
 	// Kembalikan respons sukses
 	return helpers.JSONResponse(c, fiber.StatusOK, "Defecta item deleted successfully", nil)
