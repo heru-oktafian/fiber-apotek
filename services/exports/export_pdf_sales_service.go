@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/heru-oktafian/fiber-apotek/models"
@@ -11,6 +12,7 @@ import (
 	"github.com/johnfercher/maroto/v2/pkg/components/row"
 	"github.com/johnfercher/maroto/v2/pkg/components/text"
 	"github.com/johnfercher/maroto/v2/pkg/config"
+	"github.com/johnfercher/maroto/v2/pkg/consts/align"
 	"github.com/johnfercher/maroto/v2/pkg/consts/fontstyle"
 	"github.com/johnfercher/maroto/v2/pkg/consts/orientation"
 	"github.com/johnfercher/maroto/v2/pkg/props"
@@ -66,9 +68,11 @@ func (s *ExportServices) ExportSalesToPDF(branchID string, month string) ([]byte
 	// === TABLE HEADERS ===
 	headerRowContent := row.New(8).Add(
 		col.New(2).WithStyle(headerCell()).Add(text.New("ID", headerTextProps())),
-		col.New(6).WithStyle(headerCell()).Add(text.New("MEMBER", headerTextProps())),
+		col.New(4).WithStyle(headerCell()).Add(text.New("KETERANGAN", headerTextProps())),
 		col.New(2).WithStyle(headerCell()).Add(text.New("TANGGAL", headerTextProps())),
-		col.New(2).WithStyle(headerCell()).Add(text.New("TOTAL", headerTextProps())),
+		col.New(2).WithStyle(headerCell()).Add(text.New("PEMBAYARAN", headerTextProps())),
+		col.New(1).WithStyle(headerCell()).Add(text.New("SALES", headerTextProps())),
+		col.New(1).WithStyle(headerCell()).Add(text.New("MARGIN", headerTextProps())),
 	)
 	m.AddRows(headerRowContent)
 
@@ -79,13 +83,15 @@ func (s *ExportServices) ExportSalesToPDF(branchID string, month string) ([]byte
 	rowCounter := 0
 	isFirstPage := true
 
-	// Hitung total dari semua TotalSale
+	// Hitung total dari semua TotalSale dan Margin
 	var grandTotal int
-	for _, s := range sales {
-		grandTotal += s.TotalSale
+	var grandMargin int
+	for _, sale := range sales {
+		grandTotal += sale.TotalSale
+		grandMargin += sale.ProfitEstimate
 	}
 
-	for i, s := range sales {
+	for i, sale := range sales {
 		var maxRowsThisPage int
 		if isFirstPage {
 			maxRowsThisPage = rowsPerPageFirst
@@ -100,6 +106,26 @@ func (s *ExportServices) ExportSalesToPDF(branchID string, month string) ([]byte
 			isFirstPage = false
 		}
 
+		// Logika KETERANGAN: Ambil nama item
+		var itemNames []string
+		if err := s.db.Table("sale_items sit").
+			Select("pro.name").
+			Joins("LEFT JOIN products pro ON pro.id = sit.product_id").
+			Where("sit.sale_id = ?", sale.ID).
+			Order("pro.name ASC").
+			Pluck("pro.name", &itemNames).Error; err != nil {
+			log.Printf("[ExportSalesToPDF] Failed to fetch item names for %s: %v", sale.ID, err)
+		}
+
+		descItems := strings.Join(itemNames, ", ")
+		dateWith7 := sale.SaleDate.Add(7 * time.Hour).Format("02-01-2006 15:04")
+		var description string
+		if descItems != "" {
+			description = descItems + " ; " + dateWith7
+		} else {
+			description = dateWith7
+		}
+
 		var cellStyle *props.Cell
 		var textProps props.Text
 
@@ -112,12 +138,21 @@ func (s *ExportServices) ExportSalesToPDF(branchID string, month string) ([]byte
 			textProps = dataPropsGray()
 		}
 
+		textPropsLeft := textProps
+		textPropsLeft.Align = align.Left
+		textPropsCenter := textProps
+		textPropsCenter.Align = align.Center
+		textPropsRight := textProps
+		textPropsRight.Align = align.Right
+
 		m.AddRows(
 			row.New(8).Add(
-				col.New(2).WithStyle(cellStyle).Add(text.New(s.ID, textProps)),
-				col.New(6).WithStyle(cellStyle).Add(text.New(s.MemberId, textProps)),
-				col.New(2).WithStyle(cellStyle).Add(text.New(s.SaleDate.Format("02/01/2006"), textProps)),
-				col.New(2).WithStyle(cellStyle).Add(text.New(formatRupiah(s.TotalSale), textProps)),
+				col.New(2).WithStyle(cellStyle).Add(text.New(sale.ID, textPropsLeft)),
+				col.New(4).WithStyle(cellStyle).Add(text.New(description, textPropsLeft)),
+				col.New(2).WithStyle(cellStyle).Add(text.New(sale.SaleDate.Format("02/01/2006"), textPropsCenter)),
+				col.New(2).WithStyle(cellStyle).Add(text.New(string(sale.Payment), textPropsCenter)),
+				col.New(1).WithStyle(cellStyle).Add(text.New(formatRupiah(sale.TotalSale), textPropsRight)),
+				col.New(1).WithStyle(cellStyle).Add(text.New(formatRupiah(sale.ProfitEstimate), textPropsRight)),
 			),
 		)
 
@@ -133,19 +168,22 @@ func (s *ExportServices) ExportSalesToPDF(branchID string, month string) ([]byte
 		Size:  10,
 		Style: fontstyle.Bold,
 		Color: &props.Color{Red: 255, Green: 255, Blue: 255}, // Putih
-		Align: "center",
+		Align: align.Right,
 	}
 	totalValueProps := props.Text{
 		Size:  10,
 		Style: fontstyle.Bold,
 		Color: &props.Color{Red: 255, Green: 255, Blue: 255}, // Putih
-		Align: "right",
+		Align: align.Right,
 	}
 
 	m.AddRows(
 		row.New(8).Add(
-			col.New(10).WithStyle(totalCellStyle).Add(text.New("TOTAL", totalTextProps)),
-			col.New(2).WithStyle(totalCellStyle).Add(text.New(formatRupiah(grandTotal), totalValueProps)),
+			col.New(8).WithStyle(totalCellStyle).Add(text.New("GRAND TOTAL", totalTextProps)),
+			col.New(1).WithStyle(totalCellStyle).Add(text.New("", totalTextProps)),
+			col.New(1).WithStyle(totalCellStyle).Add(text.New("", totalTextProps)),
+			col.New(1).WithStyle(totalCellStyle).Add(text.New(formatRupiah(grandTotal), totalValueProps)),
+			col.New(1).WithStyle(totalCellStyle).Add(text.New(formatRupiah(grandMargin), totalValueProps)),
 		),
 	)
 
