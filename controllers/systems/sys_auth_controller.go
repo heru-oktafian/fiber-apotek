@@ -2,6 +2,7 @@ package controllers
 
 import (
 	context "context"
+	json "encoding/json"
 	fmt "fmt"
 	log "log"
 	os "os"
@@ -256,4 +257,48 @@ func GetProfile(c *fiber.Ctx) error {
 // Coba
 func Coba(c *fiber.Ctx) error {
 	return c.SendString("Coba berhasil!")
+}
+
+// GetMenus handles the request to retrieve menu data with an optional user_role filter.
+func GetMenus(c *fiber.Ctx) error {
+	userRoles, _ := services.GetUserRole(c)
+
+	// Read the menus.json file
+	data, err := os.ReadFile("menus.json")
+	if err != nil {
+		log.Printf("Error reading menus.json: %v", err)
+		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to read menu data", err)
+	}
+
+	var menuResponse models.MenuResponse // Gunakan struct pembungkus baru
+	err = json.Unmarshal(data, &menuResponse)
+	if err != nil {
+		log.Printf("Error unmarshaling menus.json: %v", err)
+		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to parse menu data", err)
+	}
+
+	// Data menu yang sebenarnya sekarang ada di menuResponse.Data
+	menus := menuResponse.Data
+
+	// Get the user_role query parameter
+	userRoleFilter := userRoles
+
+	if userRoleFilter == "" {
+		// If no user_role filter is provided, return all menus
+		return helpers.JSONResponse(c, fiber.StatusOK, "Get All Menus Success", menus)
+	}
+
+	// Filter menus by user_role
+	var filteredMenus []models.Menu // Gunakan models.Menu
+	for _, menu := range menus {
+		if strings.EqualFold(menu.UserRole, userRoleFilter) {
+			filteredMenus = append(filteredMenus, menu)
+		}
+	}
+
+	if len(filteredMenus) == 0 {
+		return helpers.JSONResponse(c, fiber.StatusNotFound, "No menu found for the specified user_role", []models.Menu{})
+	}
+
+	return helpers.JSONResponse(c, fiber.StatusOK, "Get Menus by User Role Success", filteredMenus)
 }

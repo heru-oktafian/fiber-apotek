@@ -39,6 +39,9 @@ func AuthRoutes(app *fiber.App) {
 		return c.JSON(files)
 	})
 
+	// Endpoint Menu
+	app.Get("/api/menus", middlewares.JWTMiddleware, controllers.GetMenus)
+
 	// Endpoint Otentikasi
 	app.Post("/api/login", controllers.Login)
 	app.Post("/api/logout", controllers.Logout)
