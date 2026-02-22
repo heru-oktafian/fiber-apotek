@@ -47,4 +47,5 @@ type SaleDetailResponse struct {
 	Discount       int    `json:"discount"`
 	ProfitEstimate int    `json:"profit_estimate"`
 	Payment        string `json:"payment"`
+	Cashier        string `json:"cashier"`
 }

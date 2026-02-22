@@ -648,8 +648,9 @@ func GetAllSales(c *fiber.Ctx) error {
 	var salesFromDB []models.AllSales // Gunakan models.AllSales untuk mengambil data dari DB
 
 	query := configs.DB.Table("sales sl").
-		Select("sl.id, sl.member_id, mbr.name AS member_name, sl.sale_date, sl.total_sale, sl.discount, sl.profit_estimate, sl.payment").
+		Select("sl.id, sl.member_id, mbr.name AS member_name, sl.sale_date, sl.total_sale, sl.discount, sl.profit_estimate, sl.payment, users.name AS cashier").
 		Joins("LEFT JOIN members mbr on mbr.id = sl.member_id").
+		Joins("LEFT JOIN users on users.id=sl.user_id").
 		Where("sl.branch_id = ? AND sl.total_sale > 0", branchID).
 		Order("sl.created_at DESC")
 
@@ -685,6 +686,7 @@ func GetAllSales(c *fiber.Ctx) error {
 			Discount:       sale.Discount,
 			ProfitEstimate: sale.ProfitEstimate,
 			Payment:        string(sale.Payment),
+			Cashier:        sale.Cashier,
 		})
 	}
 
@@ -820,8 +822,9 @@ func GetSaleWithItems(c *fiber.Ctx) error {
 	var sale models.AllSales
 
 	err := db.Table("sales sl").
-		Select("sl.id, sl.member_id, mbr.name AS member_name, sl.sale_date, sl.discount, sl.total_sale, sl.profit_estimate, sl.payment").
+		Select("sl.id, sl.member_id, mbr.name AS member_name, sl.sale_date, sl.discount, sl.total_sale, sl.profit_estimate, sl.payment, users.name AS cashier").
 		Joins("LEFT JOIN members mbr ON mbr.id = sl.member_id").
+		Joins("LEFT JOIN users on users.id=sl.user_id").
 		Where("sl.id = ?", saleID).
 		Scan(&sale).Error
 

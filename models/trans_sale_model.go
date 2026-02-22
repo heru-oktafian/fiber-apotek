@@ -27,6 +27,7 @@ type AllSales struct {
 	SaleDate       time.Time     `gorm:"not null" json:"sale_date" validate:"required"` // Tetap time.Time
 	TotalSale      int           `gorm:"type:int;not null;default:0" json:"total_sale" validate:"required"`
 	Payment        PaymentStatus `gorm:"type:payment_status;not null;default:'unpaid'" json:"payment" validate:"required"`
+	Cashier        string        `gorm:"type:varchar(100);not null" json:"cashier" validate:"required"`
 }
 
 // SaleInput model for input data
