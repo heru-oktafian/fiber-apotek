@@ -39,7 +39,7 @@ func (s *ExportServices) ExportSalesToExcel(branchID string, month string) ([]by
 		Fill:      excelize.Fill{Type: "pattern", Color: []string{"#1E88E5"}, Pattern: 1},
 		Alignment: &excelize.Alignment{Horizontal: "left", Vertical: "center"},
 	})
-	f.SetCellStyle(sheet, "A1", "E1", titleStyle)
+	f.SetCellStyle(sheet, "A1", "F1", titleStyle)
 	f.SetRowHeight(sheet, 1, 25)
 
 	headers := []string{"ID", "KETERANGAN", "TANGGAL", "PEMBAYARAN", "SALES", "MARGIN"}
@@ -59,7 +59,7 @@ func (s *ExportServices) ExportSalesToExcel(branchID string, month string) ([]by
 			{Type: "right", Color: "000000", Style: 1},
 		},
 	})
-	f.SetCellStyle(sheet, "A3", "E3", headerStyle)
+	f.SetCellStyle(sheet, "A3", "F3", headerStyle)
 
 	styleCenter, _ := f.NewStyle(&excelize.Style{
 		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
@@ -125,6 +125,7 @@ func (s *ExportServices) ExportSalesToExcel(branchID string, month string) ([]by
 		Alignment: &excelize.Alignment{Horizontal: "right", Vertical: "center"},
 	})
 	f.SetCellStyle(sheet, fmt.Sprintf("A%d", totalRow), fmt.Sprintf("E%d", totalRow), grandTotalStyle)
+	f.SetCellStyle(sheet, fmt.Sprintf("F%d", totalRow), fmt.Sprintf("F%d", totalRow), grandTotalStyle)
 	f.SetRowHeight(sheet, totalRow, 20)
 
 	f.SetColWidth(sheet, "A", "A", 18)
