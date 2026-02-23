@@ -56,8 +56,8 @@ Pastikan Anda telah menginstal yang berikut ini:
 
 1.  **Clone** repositori ini:
     ```bash
-     git clone git@github.com:heru-oktafian/cores.git
-     cd cores
+     git clone git@github.com:heru-oktafian/fiber-apotek.git
+     cd fiber-apotek
      go mod init "nama/alamat git project yang ingin dibuat"
     ```
 
@@ -156,4 +156,4 @@ Untuk meminta izin, silakan hubungi saya di info@heruoktafian.com.
 
 Heru Oktafian, ST., CTT - [@heru-oktafian](https://x.com/HeruOktafianST) - [info@heruoktafian.com](mailto:info@heruoktafian.com)
 
-Tautan Proyek: [https://github.com/heru-oktafian/cores](https://github.com/heru-oktafian/cores)
+Tautan Proyek: [https://github.com/heru-oktafian/fiber-apotek](https://github.com/heru-oktafian/fiber-apotek)
