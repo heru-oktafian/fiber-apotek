@@ -296,10 +296,10 @@ func GetDailyProfitReportByUser(c *fiber.Ctx) error {
 
 	// Group by user_id to sum profit and sales per user
 	err := db.Table("daily_profit_reports").
-		Select("users.user_id, users.name AS user_name, SUM(daily_profit_reports.profit_estimate) AS profit, SUM(daily_profit_reports.total_sales) AS sales").
-		Joins("JOIN users ON users.user_id = daily_profit_reports.user_id").
+		Select("users.id, users.name AS user_name, SUM(daily_profit_reports.profit_estimate) AS profit, SUM(daily_profit_reports.total_sales) AS sales").
+		Joins("JOIN users ON users.id = daily_profit_reports.user_id").
 		Where("daily_profit_reports.report_date = ? AND daily_profit_reports.branch_id = ?", today, branchID).
-		Group("users.user_id, users.name").
+		Group("users.id, users.name").
 		Scan(&results).Error
 
 	if err != nil {
