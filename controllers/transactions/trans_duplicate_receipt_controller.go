@@ -116,9 +116,15 @@ func CreateDuplicateReceipt(c *fiber.Ctx) error {
 	req.DuplicateReceipt.TotalDuplicateReceipt = totalDUR
 	req.DuplicateReceipt.ProfitEstimate = totalProfDUR
 
+	// Tentukan member ID yang digunakan (gunakan defaultMember jika req.DuplicateReceipt.MemberId kosong)
+	memberIDToUse := req.DuplicateReceipt.MemberId
+	if memberIDToUse == "" {
+		memberIDToUse = defaultMember
+	}
+
 	insertDuplicateReceipt := models.DuplicateReceipts{
 		ID:                    durID,
-		MemberId:              defaultMember,
+		MemberId:              memberIDToUse,
 		Description:           req.DuplicateReceipt.Description,
 		DuplicateReceiptDate:  parsedDate,
 		TotalDuplicateReceipt: req.DuplicateReceipt.TotalDuplicateReceipt,
@@ -270,8 +276,35 @@ func CreateDuplicateReceipt(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to commit database transaction", err)
 	}
 
+	// --- FORMAT DATA RESPONS ---
+	// Buat itemsResponse tanpa field duplicate_receipt_id agar sesuai permintaan user
+	var itemsResponse []fiber.Map
+	for _, item := range req.Items {
+		itemsResponse = append(itemsResponse, fiber.Map{
+			"id":         item.ID,
+			"product_id": item.ProductId,
+			"price":      item.Price,
+			"qty":        item.Qty,
+			"sub_total":  item.SubTotal,
+		})
+	}
+
+	// Bungkus data hasil transaksi ke dalam format respons yang diinginkan
+	dataResponse := fiber.Map{
+		"duplicate_receipt": fiber.Map{
+			"id":                      insertDuplicateReceipt.ID,
+			"member_id":               insertDuplicateReceipt.MemberId,
+			"description":             insertDuplicateReceipt.Description,
+			"duplicate_receipt_date":  insertDuplicateReceipt.DuplicateReceiptDate.Format("2006-01-02"),
+			"total_duplicate_receipt": insertDuplicateReceipt.TotalDuplicateReceipt,
+			"profit_estimate":         insertDuplicateReceipt.ProfitEstimate,
+			"payment":                 insertDuplicateReceipt.Payment,
+		},
+		"items": itemsResponse,
+	}
+
 	// Berhasil
-	return helpers.JSONResponse(c, fiber.StatusOK, "Duplicate receipt transaction created successfully", req)
+	return helpers.JSONResponse(c, fiber.StatusOK, "Duplicate receipt transaction created successfully", dataResponse)
 }
 
 // UpdateDuplicateReceipt Function (Modified)
