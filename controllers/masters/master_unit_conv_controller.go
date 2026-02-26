@@ -162,7 +162,7 @@ func GetAllUnitConversion(c *fiber.Ctx) error {
 	var unit_conversions []models.UnitConversionDetail
 
 	// Query dasar
-	query := configs.DB.Table("unit_conversions unc").
+	query := configs.DB.Debug().Table("unit_conversions unc").
 		Select("unc.id, pro.name AS product_name, uin.name AS init_name, ufi.name AS final_name, unc.value_conv, unc.product_id, unc.init_id, unc.final_id, unc.branch_id").
 		Joins("LEFT JOIN products pro on pro.id = unc.product_id").
 		Joins("LEFT JOIN units uin on uin.id = unc.init_id").
