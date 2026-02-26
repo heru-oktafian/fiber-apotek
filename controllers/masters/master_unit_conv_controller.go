@@ -162,11 +162,11 @@ func GetAllUnitConversion(c *fiber.Ctx) error {
 	var unit_conversions []models.UnitConversionDetail
 
 	// Query dasar
-	query := configs.DB.Debug().Table("unit_conversions unc").
+	query := configs.DB.Table("unit_conversions unc").
 		Select("unc.id, pro.name AS product_name, uin.name AS init_name, ufi.name AS final_name, unc.value_conv, unc.product_id, unc.init_id, unc.final_id, unc.branch_id").
-		Joins("LEFT JOIN products pro on pro.id = unc.product_id").
-		Joins("LEFT JOIN units uin on uin.id = unc.init_id").
-		Joins("LEFT JOIN units ufi on ufi.id = unc.final_id").
+		Joins("INNER JOIN products pro ON pro.id = unc.product_id AND pro.branch_id = ?", branch_id).
+		Joins("INNER JOIN units uin ON uin.id = unc.init_id AND uin.branch_id = ?", branch_id).
+		Joins("INNER JOIN units ufi ON ufi.id = unc.final_id AND ufi.branch_id = ?", branch_id).
 		Where("unc.branch_id = ?", branch_id)
 
 	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &unit_conversions, []string{"pro.name", "uin.name", "ufi.name"})
