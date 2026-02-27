@@ -42,6 +42,9 @@ func GetDefaultMember(c *fiber.Ctx) (string, error) {
 
 // GetClaimsToken mendapatkan nilai klaim dari token
 func GetClaimsToken(c *fiber.Ctx, key string) (string, error) {
+	if c == nil {
+		return "", fmt.Errorf("context is nil")
+	}
 	// Ambil nilai token dari header Authorization
 	authHeader := c.Get("Authorization")
 	// fmt.Println("Authorization Header:", authHeader)

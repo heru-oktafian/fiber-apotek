@@ -105,6 +105,7 @@ type CreateOpnameItemInput struct {
 	OpnameId    string `json:"opname_id" validate:"required"`
 	ProductId   string `json:"product_id" validate:"required"`
 	Qty         int    `json:"qty" validate:"required"`
+	Price       int    `json:"price" validate:"required"`
 	ExpiredDate string `json:"expired_date" validate:"required"`
 }
 

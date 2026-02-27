@@ -402,19 +402,22 @@ func GetOpnameWithItems(c *fiber.Ctx) error {
 }
 
 // CreateOpnameItem Function
+// expects JSON body with opname_id, product_id, qty, expired_date
 func CreateOpnameItem(c *fiber.Ctx) error {
 	db := configs.DB
-	opnameID := c.Params("id")
 	var input models.CreateOpnameItemInput
 
 	if err := c.BodyParser(&input); err != nil {
 		return helpers.JSONResponse(c, http.StatusBadRequest, "Masukan tidak valid: "+err.Error(), err)
 	}
+	if input.OpnameId == "" {
+		return helpers.JSONResponse(c, http.StatusBadRequest, "Opname ID tidak boleh kosong", nil)
+	}
 
 	// Ambil branch ID dan user ID dari token
 	branchID, _ := services.GetBranchID(c)
 	userID, _ := services.GetUserID(c)
-	input.OpnameId = opnameID
+	// opname id already provided in input.OpnameId
 
 	// Ambil data produk untuk mendapatkan price, stock, dan purchase_price
 	var product models.Product
@@ -448,7 +451,7 @@ func CreateOpnameItem(c *fiber.Ctx) error {
 	opnameItem.ProductId = input.ProductId
 	opnameItem.Qty = input.Qty
 	opnameItem.ExpiredDate = parsedDate
-	opnameItem.Price = oldPurchasePrice
+	opnameItem.Price = input.Price
 	opnameItem.QtyExist = oldStock                         // Gunakan stock LAMA
 	opnameItem.SubTotalExist = oldStock * oldPurchasePrice // Gunakan stock LAMA
 	opnameItem.SubTotal = opnameItem.Qty * opnameItem.Price
@@ -506,19 +509,22 @@ func CreateOpnameItem(c *fiber.Ctx) error {
 }
 
 // GetAllOpnameItems tampilkan semua item berdasarkan product_name tanpa pagination
+// Opname ID harus dikirim dalam body JSON sebagai {"opname_id":"..."}
 func GetAllOpnameItems(c *fiber.Ctx) error {
-
-	// Get Opname id dari param
-	opnameID := c.Params("id")
-
-	// Parsing body JSON ke struct
-	var OpnameItems []models.AllOpnameItemMobiles
+	// parse opname_id from body
+	var payload struct {
+		OpnameId string `json:"opname_id" validate:"required"`
+	}
+	if err := c.BodyParser(&payload); err != nil {
+		return helpers.JSONResponse(c, http.StatusBadRequest, "Masukan tidak valid: "+err.Error(), err)
+	}
 
 	// Query dasar
+	var OpnameItems []models.AllOpnameItemMobiles
 	query := configs.DB.Table("opname_items pit").
 		Select("pit.id, pit.opname_id, pit.product_id, pro.name AS product_name, TO_CHAR(pit.price, 'FM999G999G999') AS price, pit.qty, pit.qty_exist, TO_CHAR(pit.sub_total, 'FM999G999G999') AS sub_total, TO_CHAR(pit.sub_total_exist, 'FM999G999G999') AS sub_total_exist, TO_CHAR(pit.expired_date, 'DD-MM-YYYY') AS expired_date").
 		Joins("LEFT JOIN products pro ON pro.id = pit.product_id").
-		Where("pit.opname_id = ?", opnameID).
+		Where("pit.opname_id = ?", payload.OpnameId).
 		Order("pro.name ASC")
 
 	// Eksekusi query
@@ -532,17 +538,25 @@ func GetAllOpnameItems(c *fiber.Ctx) error {
 // Update OpnameItem
 func UpdateOpnameItemByID(c *fiber.Ctx) error {
 	db := configs.DB
-	id := c.Params("id")
+	// parse id along with update payload from body
+	var payload struct {
+		ID string `json:"id" validate:"required"`
+		models.CreateOpnameItemUpdate
+	}
+	if err := c.BodyParser(&payload); err != nil {
+		return helpers.JSONResponse(c, http.StatusBadRequest, "Masukan tidak valid", nil)
+	}
+	if payload.ID == "" {
+		return helpers.JSONResponse(c, http.StatusBadRequest, "ID item tidak boleh kosong", nil)
+	}
+	id := payload.ID
 
 	var existingItem models.OpnameItems
 	if err := db.First(&existingItem, "id = ?", id).Error; err != nil {
 		return helpers.JSONResponse(c, http.StatusNotFound, "Item tidak ditemukan", nil)
 	}
 
-	var updatedItem models.CreateOpnameItemUpdate
-	if err := c.BodyParser(&updatedItem); err != nil {
-		return helpers.JSONResponse(c, http.StatusBadRequest, "Masukan tidak valid", nil)
-	}
+	updatedItem := payload.CreateOpnameItemUpdate
 
 	// Kosongkan stok lama asynchronously
 	services.ZeroProductStockAsync(db, existingItem.ProductId, existingItem.Qty)
@@ -581,11 +595,12 @@ func UpdateOpnameItemByID(c *fiber.Ctx) error {
 	}
 
 	// Supporting operations asynchronously
-	go func() {
+	// capture values from context now to avoid nil pointer in goroutine
+	branchID, _ := services.GetBranchID(c)
+	userID, _ := services.GetUserID(c)
+	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
+	go func(branchID, userID, cacheKey string) {
 		// Update stock in Redis for both old and new products
-		branchID, _ := services.GetBranchID(c)
-		userID, _ := services.GetUserID(c)
-		cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
 
 		// Update stock for new product
 		var newProd models.Product
@@ -607,7 +622,7 @@ func UpdateOpnameItemByID(c *fiber.Ctx) error {
 
 		// Invalidate cache opname products
 		services.DeleteTemporaryOpnameProductCache(cacheKey)
-	}()
+	}(branchID, userID, cacheKey)
 
 	return helpers.JSONResponse(c, http.StatusOK, "Item berhasil diperbarui", existingItem)
 }
@@ -615,7 +630,13 @@ func UpdateOpnameItemByID(c *fiber.Ctx) error {
 // DeleteOpnameItemByID OpnameItem
 func DeleteOpnameItemByID(c *fiber.Ctx) error {
 	db := configs.DB
-	id := c.Params("id")
+	var body struct {
+		ID string `json:"id" validate:"required"`
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return helpers.JSONResponse(c, http.StatusBadRequest, "Masukan tidak valid", err)
+	}
+	id := body.ID
 
 	var item models.OpnameItems
 	if err := db.First(&item, "id = ?", id).Error; err != nil {
@@ -631,11 +652,12 @@ func DeleteOpnameItemByID(c *fiber.Ctx) error {
 	}
 
 	// Supporting operations asynchronously
-	go func() {
+	// capture context-derived values upfront to avoid nil pointer later
+	branchID, _ := services.GetBranchID(c)
+	userID, _ := services.GetUserID(c)
+	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
+	go func(cacheKey string, item models.OpnameItems) {
 		// Update stock in Redis
-		branchID, _ := services.GetBranchID(c)
-		userID, _ := services.GetUserID(c)
-		cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
 		var prod models.Product
 		if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
 			services.UpdateOpnameProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
@@ -647,7 +669,7 @@ func DeleteOpnameItemByID(c *fiber.Ctx) error {
 
 		// Invalidate cache opname products
 		services.DeleteTemporaryOpnameProductCache(cacheKey)
-	}()
+	}(cacheKey, item)
 
 	return helpers.JSONResponse(c, http.StatusOK, "Item berhasil dihapus", item)
 }

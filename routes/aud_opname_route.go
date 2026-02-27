@@ -20,11 +20,11 @@ func AudOpnameRoute(app *fiber.App) {
 	app.Put("/api/opnames/:id", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.UpdateOpnameByID)
 	app.Delete("/api/opnames/:id", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.DeleteOpnameByID)
 
-	// Endpoint Opname Items
-	app.Get("/api/opname-items/:id", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetAllOpnameItems)
-	app.Post("/api/opname-items/:id", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.CreateOpnameItem)
-	app.Put("/api/opname-items/:id", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.UpdateOpnameItemByID)
-	app.Delete("/api/opname-items/:id", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.DeleteOpnameItemByID)
+	// Endpoint Opname Items (ID now supplied in request body)
+	app.Get("/api/opname-items", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetAllOpnameItems)
+	app.Post("/api/opname-items", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.CreateOpnameItem)
+	app.Put("/api/opname-items", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.UpdateOpnameItemByID)
+	app.Delete("/api/opname-items", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.DeleteOpnameItemByID)
 
 	// Endpoint Products Combobox
 	app.Get("/api/cmb-product-opname", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetProductsComboboxByName)
