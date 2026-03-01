@@ -22,6 +22,7 @@ func AudOpnameRoute(app *fiber.App) {
 
 	// Endpoint Opname Items (ID now supplied in request body)
 	app.Get("/api/opname-items", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetAllOpnameItems)
+	app.Post("/api/opname-items-all", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetAllOpnameItems)
 	app.Post("/api/opname-items", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.CreateOpnameItem)
 	app.Put("/api/opname-items", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.UpdateOpnameItemByID)
 	app.Delete("/api/opname-items", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.DeleteOpnameItemByID)
