@@ -438,10 +438,11 @@ func CreateOpnameItem(c *fiber.Ctx) error {
 	oldStock := product.Stock
 	oldPurchasePrice := product.PurchasePrice
 
-	// Update expired date dan stock produk sesuai inputan
+	// Update expired date, stock, dan purchase price produk sesuai inputan
 	if err := db.Model(&product).Updates(map[string]interface{}{
-		"expired_date": parsedDate,
-		"stock":        input.Qty,
+		"expired_date":   parsedDate,
+		"stock":          input.Qty,
+		"purchase_price": input.Price, // tambahkan pembaruan harga beli
 	}).Error; err != nil {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal memperbarui produk: "+err.Error(), err)
 	}
