@@ -10,8 +10,8 @@ func AudOpnameRoute(app *fiber.App) {
 	// Endpoint Mobile Opnames
 	app.Get("/api/mobile-opnames", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetAllMobileOpnames)
 	app.Get("/api/mobile-opnames-active", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetAllActiveMobileOpnames)
-	app.Get("/api/mobile-opname-item-details", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetMobileOpnameItemDetails)
-	app.Get("/api/mobile-opname-item-glimpses", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetMobileOpnameItemsGlimpse)
+	app.Get("/api/mobile-opnames-item-details", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetMobileOpnameItemDetails)
+	app.Get("/api/mobile-opnames-item-glimpses", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetMobileOpnameItemsGlimpse)
 
 	// Endpoint Opnames
 	app.Get("/api/opnames", middlewares.JWTMiddleware, middlewares.RoleMiddleware("administrator", "operator", "cashier", "finance", "superadmin"), controllers.GetAllOpnames)
