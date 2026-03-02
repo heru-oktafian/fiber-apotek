@@ -2,6 +2,7 @@ package crons
 
 import (
 	log "log"
+	os "os"
 	time "time"
 
 	helpers "github.com/heru-oktafian/fiber-apotek/helpers"
@@ -10,6 +11,9 @@ import (
 )
 
 func AssetCounter(db *gorm.DB) error {
+	// Tentukan apakah harus menghitung kredit riil dari assets
+	realAsset := os.Getenv("REAL_ASSET") == "TRUE"
+
 	// SQL query untuk menghitung nilai aset per cabang
 	query := `
 		SELECT 
@@ -32,39 +36,45 @@ func AssetCounter(db *gorm.DB) error {
 		return err
 	}
 
-	// Query untuk total pembelian kredit per cabang
-	creditQuery := `
-		SELECT 
-			branch_id,
-			COALESCE(SUM(total_purchase), 0) as total_credit
-		FROM 
-			purchases
-		WHERE 
-			payment = 'paid_by_credit'
-		GROUP BY 
-			branch_id
-	`
-
-	type BranchCredit struct {
-		BranchID    string
-		TotalCredit int
-	}
-
-	var branchCredits []BranchCredit
-	if err := db.Raw(creditQuery).Scan(&branchCredits).Error; err != nil {
-		log.Printf("[ASSET COUNTER] Error querying branch credits: %v", err)
-		return err
-	}
-
-	// Buat map untuk lookup total kredit per branch
+	// Persiapkan peta kredit hanya jika REAL_ASSET=true
 	creditMap := make(map[string]int)
-	for _, credit := range branchCredits {
-		creditMap[credit.BranchID] = credit.TotalCredit
+	if realAsset {
+		// Query untuk total pembelian kredit per cabang
+		creditQuery := `
+			SELECT 
+				branch_id,
+				COALESCE(SUM(total_purchase), 0) as total_credit
+			FROM 
+				purchases
+			WHERE 
+				payment = 'paid_by_credit'
+			GROUP BY 
+				branch_id
+		`
+
+		type BranchCredit struct {
+			BranchID    string
+			TotalCredit int
+		}
+
+		var branchCredits []BranchCredit
+		if err := db.Raw(creditQuery).Scan(&branchCredits).Error; err != nil {
+			log.Printf("[ASSET COUNTER] Error querying branch credits: %v", err)
+			return err
+		}
+
+		// Buat map untuk lookup total kredit per branch
+		for _, credit := range branchCredits {
+			creditMap[credit.BranchID] = credit.TotalCredit
+		}
 	}
 
 	// Menyimpan aset harian untuk setiap cabang
 	for _, asset := range branchAssets {
-		credit := creditMap[asset.BranchID]
+		credit := 0
+		if realAsset {
+			credit = creditMap[asset.BranchID]
+		}
 		finalAsset := asset.TotalAsset - credit
 
 		// Hitung statistik bulan ini untuk branch ini: jumlah hari tersimpan dan jumlah asset_value
