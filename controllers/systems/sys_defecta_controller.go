@@ -42,8 +42,8 @@ func CreateDefecta(c *fiber.Ctx) error {
 	defecta := models.Defectas{
 		ID:            generatedID,
 		DefectaDate:   parsedDate,
-		TotalEstimate: 0, // Akan dikalkulasi nanti
-		DefectaStatus: input.DefectaStatus,
+		TotalEstimate: 0,             // Akan dikalkulasi nanti
+		DefectaStatus: models.Active, // Status awal adalah Active
 		BranchID:      branchID,
 		CreatedAt:     nowWIB,
 		UpdatedAt:     nowWIB,
@@ -385,7 +385,7 @@ func GetDefetaWithItems(c *fiber.Ctx) error {
 	// Ambil data item defecta beserta nama produk dan unitnya
 	var defectaItems []models.AllDefectaItems
 	if err := db.Table("defecta_items di").
-		Select("di.id, di.defecta_id, pro.name as product_name, un.name as unit_name, di.price, di.qty, di.sub_total").
+		Select("di.id, di.product_id, pro.name as product_name, di.unit_id, un.name as unit_name, di.price, di.qty, di.sub_total").
 		Joins("LEFT JOIN products pro ON pro.id = di.product_id").
 		Joins("LEFT JOIN units un ON un.id = pro.unit_id").
 		Where("di.defecta_id = ?", defecta.ID).
@@ -397,8 +397,9 @@ func GetDefetaWithItems(c *fiber.Ctx) error {
 	for _, item := range defectaItems {
 		formatedDefectaItems = append(formatedDefectaItems, models.AllDefectaItems{
 			ID:          item.ID,
-			DefectaId:   item.DefectaId,
+			ProductId:   item.ProductId,
 			ProductName: item.ProductName,
+			UnitId:      item.UnitId,
 			UnitName:    item.UnitName,
 			Price:       item.Price,
 			Qty:         item.Qty,

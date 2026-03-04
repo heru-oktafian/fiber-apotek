@@ -27,8 +27,9 @@ type DefectaItems struct {
 // All Defecta Items model merepresentasikan tabel defecta_items dengan join ke tabel products dan units
 type AllDefectaItems struct {
 	ID          string `gorm:"type:varchar(15);primaryKey" json:"id"`
-	DefectaId   string `gorm:"type:varchar(15);not null" json:"defecta_id" validate:"required"`
+	ProductId   string `gorm:"type:varchar(15);not null" json:"product_id" validate:"required"`
 	ProductName string `gorm:"type:varchar(100);not null" json:"product_name" validate:"required"`
+	UnitId      string `gorm:"type:varchar(15);not null" json:"unit_id" validate:"required"`
 	UnitName    string `gorm:"type:varchar(50);not null" json:"unit_name" validate:"required"`
 	Price       int    `gorm:"type:int;not null;default:0" json:"price" validate:"required"`
 	Qty         int    `gorm:"type:int;not null;default:0" json:"qty" validate:"required"`
@@ -37,8 +38,7 @@ type AllDefectaItems struct {
 
 // Struct baru untuk menangani input defecta, khususnya defecta_date sebagai string
 type DefectaInput struct {
-	DefectaDate   string     `json:"defecta_date"`   // Diubah menjadi string
-	TotalEstimate int        `json:"total_estimate"` // Akan dikalkulasi
+	DefectaDate   string     `json:"defecta_date"` // Diubah menjadi string
 	DefectaStatus DataStatus `json:"defecta_status"`
 	BranchID      string     `json:"branch_id"`
 }
