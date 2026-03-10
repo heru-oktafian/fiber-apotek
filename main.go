@@ -74,7 +74,7 @@ func main() {
 
 	// Aktifkan Rate Limiter
 	app.Use(limiter.New(limiter.Config{
-		Max:        150,             // Maksimal 150 request
+		Max:        80,              // Maksimal 80 request
 		Expiration: 1 * time.Minute, // Tiap 1 menit
 		KeyGenerator: func(c *fiber.Ctx) string {
 			return c.IP() // Membatasi berdasarkan alamat IP
