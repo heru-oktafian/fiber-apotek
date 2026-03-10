@@ -394,8 +394,24 @@ func DeleteFirstStockItem(c *fiber.Ctx) error {
 
 // Get All FirstStocks tampilkan semua first_stock
 func GetAllFirstStocks(c *fiber.Ctx) error {
+	// Dapatkan waktu sekarang di WIB
+	nowWIB := time.Now().In(configs.Location)
+
 	// Get branch id
 	branch_id, _ := services.GetBranchID(c)
+
+	month := strings.TrimSpace(c.Query("month"))
+
+	// Jika month kosong, isi dengan bulan ini (format YYYY-MM)
+	if month == "" {
+		month = nowWIB.Format("2006-01")
+	}
+
+	startDate, err := time.Parse("2006-01", month)
+	if err != nil {
+		return helpers.JSONResponse(c, fiber.StatusBadRequest, "Invalid month format. Use YYYY-MM", nil)
+	}
+	endDate := startDate.AddDate(0, 1, 0)
 
 	var FirstStocks []models.AllFirstStocks
 	var total int
@@ -404,6 +420,7 @@ func GetAllFirstStocks(c *fiber.Ctx) error {
 	query := configs.DB.Table("first_stocks pur").
 		Select("pur.id, pur.description, pur.first_stock_date, pur.total_first_stock, pur.payment").
 		Where("pur.branch_id = ?", branch_id).
+		Where("pur.first_stock_date >= ? AND pur.first_stock_date < ?", startDate, endDate).
 		Order("pur.created_at DESC")
 
 	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &FirstStocks, []string{"pur.description"})

@@ -78,15 +78,6 @@ func UpdateDefecta(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, fiber.StatusNotFound, "Defecta not found", nil)
 	}
 
-	// Cek apakah defecta masih bisa diedit
-	editable, err := services.IsEditable(db, "defectas", defecta.ID, 30*time.Minute)
-	if err != nil {
-		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Error checking defecta status", nil)
-	}
-	if !editable {
-		return helpers.JSONResponse(c, fiber.StatusBadRequest, "Defecta cannot be edited in its current status", nil)
-	}
-
 	// Perbarui field defecta_date jika ada di input
 	if input.DefectaDate != "" {
 		layout := "2006-01-02"
@@ -123,15 +114,6 @@ func DeleteDefecta(c *fiber.Ctx) error {
 	var defecta models.Defectas
 	if err := db.First(&defecta, "id = ?", id).Error; err != nil {
 		return helpers.JSONResponse(c, fiber.StatusNotFound, "Defecta not found", nil)
-	}
-
-	// Cek apakah defecta masih bisa dihapus
-	editable, err := services.IsEditable(db, "defectas", defecta.ID, 30*time.Minute)
-	if err != nil {
-		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Error checking defecta status", nil)
-	}
-	if !editable {
-		return helpers.JSONResponse(c, fiber.StatusBadRequest, "Defecta cannot be deleted in its current status", nil)
 	}
 
 	// Hapus detail items yang terkait dengan defecta

@@ -128,12 +128,27 @@ func GetMobileOpnameItemsGlimpse(c *fiber.Ctx) error {
 
 // Get All Opnames tampilkan semua opname
 func GetAllOpnames(c *fiber.Ctx) error {
+	// Dapatkan waktu sekarang di WIB
+	nowWIB := time.Now().In(configs.Location)
+
 	// Get branch id
 	branch_id, _ := services.GetBranchID(c)
 
 	// Ambil parameter page dan search dari query URL
 	pageParam := c.Query("page")
 	search := strings.TrimSpace(c.Query("search"))
+	month := strings.TrimSpace(c.Query("month"))
+
+	// Jika month kosong, isi dengan bulan ini (format YYYY-MM)
+	if month == "" {
+		month = nowWIB.Format("2006-01")
+	}
+
+	startDate, err := time.Parse("2006-01", month)
+	if err != nil {
+		return helpers.JSONResponse(c, http.StatusBadRequest, "Invalid month format. Use YYYY-MM", nil)
+	}
+	endDate := startDate.AddDate(0, 1, 0)
 
 	// Konversi page ke int, default ke 1 jika tidak valid
 	page := 1
@@ -151,6 +166,7 @@ func GetAllOpnames(c *fiber.Ctx) error {
 	query := configs.DB.Table("opnames pur").
 		Select("pur.id, pur.description, TO_CHAR(pur.opname_date, 'DD-MM-YYYY') AS opname_date, pur.total_opname").
 		Where("pur.branch_id = ?", branch_id).
+		Where("pur.opname_date >= ? AND pur.opname_date < ?", startDate, endDate).
 		Order("pur.created_at DESC")
 
 	// Jika ada search key, tambahkan filter WHERE
