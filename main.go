@@ -8,6 +8,7 @@ import (
 
 	fiber "github.com/gofiber/fiber/v2"
 	cors "github.com/gofiber/fiber/v2/middleware/cors"
+	limiter "github.com/gofiber/fiber/v2/middleware/limiter"
 	logger "github.com/gofiber/fiber/v2/middleware/logger"
 	configs "github.com/heru-oktafian/fiber-apotek/configs"
 	helpers "github.com/heru-oktafian/fiber-apotek/helpers"
@@ -69,6 +70,18 @@ func main() {
 		AllowOrigins: "*", // Sesuaikan jika kamu ingin membatasi domain tertentu
 		AllowMethods: "GET,POST,PUT,DELETE",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+	}))
+
+	// Aktifkan Rate Limiter
+	app.Use(limiter.New(limiter.Config{
+		Max:        150,             // Maksimal 150 request
+		Expiration: 1 * time.Minute, // Tiap 1 menit
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP() // Membatasi berdasarkan alamat IP
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return helpers.JSONResponse(c, fiber.StatusTooManyRequests, "Terlalu banyak permintaan (Rate limit tercapai). Silakan coba lagi nanti.", nil)
+		},
 	}))
 
 	// Setup rute
