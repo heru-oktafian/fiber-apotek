@@ -51,7 +51,7 @@ func GetAllSupplier(c *fiber.Ctx) error {
 		Joins("LEFT JOIN supplier_categories sc ON sc.id = s.supplier_category_id").
 		Where("s.branch_id = ?", branch_id)
 
-	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &Supplier, []string{"s.name", "s.address", "sc.name"})
+	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &Supplier, []string{"s.name ILIKE ?", "s.address ILIKE ?", "sc.name ILIKE ?"})
 	if err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Get Supplier Category failed", err.Error())
 	}

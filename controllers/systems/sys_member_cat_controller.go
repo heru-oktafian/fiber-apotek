@@ -47,7 +47,7 @@ func GetAllMemberCategory(c *fiber.Ctx) error {
 	// Query dasar
 	query := configs.DB.Table("member_categories mc").Select("mc.id, mc.name, mc.points_conversion_rate, mc.branch_id").Where("mc.branch_id = ?", branch_id)
 
-	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &MemberCategory, []string{"mc.name"})
+	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &MemberCategory, []string{"mc.name ILIKE ?"})
 	if err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Get Units failed", err.Error())
 	}

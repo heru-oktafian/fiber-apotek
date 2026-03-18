@@ -81,7 +81,7 @@ func GetAllProductCategory(c *fiber.Ctx) error {
 	query := config.DB.Table("product_categories pc").Select("pc.id AS product_category_id, pc.name AS product_category_name").Where("pc.branch_id = ?", branch_id)
 
 	// Hitung total data untuk pagination
-	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &ProductCategory, []string{"pc.name"})
+	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &ProductCategory, []string{"pc.name ILIKE ?"})
 	if err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Get Product Categories failed", err.Error())
 	}

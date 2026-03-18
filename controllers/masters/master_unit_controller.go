@@ -47,7 +47,7 @@ func GetAllUnit(c *fiber.Ctx) error {
 	// Query dasar
 	query := configs.DB.Table("units un").Select("un.id, un.name, un.branch_id").Where("un.branch_id = ?", branch_id)
 
-	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &Unit, []string{"un.name"})
+	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &Unit, []string{"un.name ILIKE ?"})
 	if err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Get Units failed", err.Error())
 	}

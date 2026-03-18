@@ -48,7 +48,7 @@ func GetAllSupplierCategory(c *fiber.Ctx) error {
 		Where("sc.branch_id = ?", branch_id).
 		Order("sc.name ASC")
 
-	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &SupplierCategory, []string{"sc.name"})
+	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &SupplierCategory, []string{"sc.name ILIKE ?"})
 	if err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Get Supplier Category failed", err.Error())
 	}

@@ -47,7 +47,7 @@ func Paginate(c *fiber.Ctx, query *gorm.DB, model interface{}, searchFields []st
 				if whereClause != "" {
 					whereClause += " OR "
 				}
-				whereClause += "LOWER(" + field + ") ILIKE ?"
+				whereClause += field
 				args[i] = "%" + search + "%"
 			}
 			query = query.Where(whereClause, args...)

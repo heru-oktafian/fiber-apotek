@@ -169,7 +169,7 @@ func GetAllUnitConversion(c *fiber.Ctx) error {
 		Joins("INNER JOIN units ufi ON ufi.id = unc.final_id AND ufi.branch_id = ?", branch_id).
 		Where("unc.branch_id = ?", branch_id)
 
-	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &unit_conversions, []string{"pro.name", "uin.name", "ufi.name"})
+	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &unit_conversions, []string{"pro.name ILIKE ?", "uin.name ILIKE ?", "ufi.name ILIKE ?"})
 	if err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Get Unit Conversions failed", err.Error())
 	}

@@ -51,7 +51,7 @@ func GetAllMember(c *fiber.Ctx) error {
 		Joins("LEFT JOIN member_categories mc ON mc.id = m.member_category_id").
 		Where("m.branch_id = ?", branch_id)
 
-	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &Member, []string{"m.name", "m.phone", "m.address"})
+	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &Member, []string{"m.name ILIKE ?", "m.phone ILIKE ?", "m.address ILIKE ?", "mc.name ILIKE ?"})
 	if err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Get Units failed", err.Error())
 	}

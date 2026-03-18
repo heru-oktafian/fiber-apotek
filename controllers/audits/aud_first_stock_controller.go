@@ -423,7 +423,7 @@ func GetAllFirstStocks(c *fiber.Ctx) error {
 		Where("pur.first_stock_date >= ? AND pur.first_stock_date < ?", startDate, endDate).
 		Order("pur.created_at DESC")
 
-	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &FirstStocks, []string{"pur.description"})
+	_, search, total, page, totalPages, limit, err := helpers.Paginate(c, query, &FirstStocks, []string{"pur.description ILIKE ?"})
 	if err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Get FirstStocks failed", err.Error())
 	}
