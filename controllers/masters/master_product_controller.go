@@ -80,18 +80,18 @@ func CmbProdSale(c *fiber.Ctx) error {
 	search := strings.TrimSpace(c.Query("search"))
 
 	// Buat cacheKey berdasarkan branch_id dan user_id
-	cacheKey := fmt.Sprintf("%v:%v", branch_id, user_id)
+	// cacheKey := fmt.Sprintf("%v:%v", branch_id, user_id)
 
 	// Cek apakah ada data di Redis terlebih dahulu
-	cachedProducts, err := services.GetTemporaryProductCache(cacheKey)
-	if err != nil {
-		fmt.Printf("Failed to get product cache for cacheKey %s: %v\n", cacheKey, err)
-		// Lanjutkan ke query database jika gagal ambil cache
-	}
-	if cachedProducts != nil {
-		// Jika ada data di cache, gunakan data tersebut
-		return helpers.JSONResponse(c, fiber.StatusOK, "Combo Products retrieved from cache successfully", cachedProducts)
-	}
+	// cachedProducts, err := services.GetTemporaryProductCache(cacheKey)
+	// if err != nil {
+	// 	fmt.Printf("Failed to get product cache for cacheKey %s: %v\n", cacheKey, err)
+	// 	// Lanjutkan ke query database jika gagal ambil cache
+	// }
+	// if cachedProducts != nil {
+	// 	// Jika ada data di cache, gunakan data tersebut
+	// 	return helpers.JSONResponse(c, fiber.StatusOK, "Combo Products retrieved from cache successfully", cachedProducts)
+	// }
 
 	// Jika tidak ada di cache, lakukan query ke database
 	var cmbProducts []models.ProdSaleCombo
@@ -101,10 +101,10 @@ func CmbProdSale(c *fiber.Ctx) error {
 		Joins("LEFT JOIN units ON units.id = products.unit_id").
 		Where("products.branch_id = ?", branch_id)
 
-	//if search != "" {
+	if search != "" {
 		search = strings.ToLower(search)
 		query = query.Where("LOWER(products.name) LIKE ? OR LOWER(products.description) LIKE ? OR LOWER(products.id) LIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%")
-	//}
+	}
 
 	query = query.Order("products.name ASC")
 
@@ -113,9 +113,9 @@ func CmbProdSale(c *fiber.Ctx) error {
 	}
 
 	// Simpan list produk ke Redis dengan cacheKey
-	if err := services.SetTemporaryProductCache(cacheKey, cmbProducts); err != nil {
-		fmt.Printf("Failed to save product cache for cacheKey %s: %v\n", cacheKey, err)
-	}
+	// if err := services.SetTemporaryProductCache(cacheKey, cmbProducts); err != nil {
+	// 	fmt.Printf("Failed to save product cache for cacheKey %s: %v\n", cacheKey, err)
+	// }
 
 	return helpers.JSONResponse(c, fiber.StatusOK, "Combo Products retrieved successfully", cmbProducts)
 }
