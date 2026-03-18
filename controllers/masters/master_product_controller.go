@@ -76,7 +76,7 @@ func GetAllProduct(c *fiber.Ctx) error {
 // CmbProdSale mengembalikan daftar produk untuk combo box transaksi penjualan
 func CmbProdSale(c *fiber.Ctx) error {
 	branch_id, _ := services.GetBranchID(c)
-	user_id, _ := services.GetUserID(c)
+	// user_id, _ := services.GetUserID(c)
 	search := strings.TrimSpace(c.Query("search"))
 
 	// Buat cacheKey berdasarkan branch_id dan user_id
