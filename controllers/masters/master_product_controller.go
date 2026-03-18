@@ -96,7 +96,7 @@ func CmbProdSale(c *fiber.Ctx) error {
 	// Jika tidak ada di cache, lakukan query ke database
 	var cmbProducts []models.ProdSaleCombo
 
-	query := configs.DB.Table("products").
+	query := configs.DB.Debug().Table("products").
 		Select("products.id as product_id, products.name as product_name, sales_price AS price, products.stock, products.unit_id, units.name AS unit_name").
 		Joins("LEFT JOIN units ON units.id = products.unit_id").
 		Where("products.branch_id = ?", branch_id)
