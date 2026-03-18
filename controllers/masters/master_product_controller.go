@@ -101,10 +101,10 @@ func CmbProdSale(c *fiber.Ctx) error {
 		Joins("LEFT JOIN units ON units.id = products.unit_id").
 		Where("products.branch_id = ?", branch_id)
 
-	if search != "" {
+	//if search != "" {
 		search = strings.ToLower(search)
 		query = query.Where("LOWER(products.name) LIKE ? OR LOWER(products.description) LIKE ? OR LOWER(products.id) LIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%")
-	}
+	//}
 
 	query = query.Order("products.name ASC")
 
