@@ -413,8 +413,14 @@ func FormatIndonesianDate(t time.Time) string {
 }
 
 // FormatIndonesianDateTime memformat objek time.Time menjadi string tanggal dan waktu dalam Bahasa Indonesia.
+// Waktu akan diubah ke timezone WIB (Asia/Jakarta).
 // Contoh: "22 Juni 2025 14:05:08"
 func FormatIndonesianDateTime(t time.Time) string {
+	loc, err := time.LoadLocation("Asia/Jakarta")
+	if err == nil {
+		t = t.In(loc)
+	}
+
 	months := []string{
 		"Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember",
 	}
