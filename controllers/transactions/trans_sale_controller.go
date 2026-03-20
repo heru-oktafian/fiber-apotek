@@ -848,7 +848,7 @@ func GetSaleWithItems(c *fiber.Ctx) error {
 
 	// Format tanggal secara manual untuk respons ini
 	// Menggunakan helper FormatIndonesianDate yang sudah kita buat
-	formattedSaleDate := helpers.FormatIndonesianDate(sale.SaleDate)
+	formattedSaleDate := helpers.FormatIndonesianDateTime(sale.SaleDate)
 
 	// Buat objek respons menggunakan struct SaleItemResponse yang baru
 	// dan isi field-fieldnya

@@ -411,3 +411,18 @@ func FormatIndonesianDate(t time.Time) string {
 	year := t.Year()
 	return fmt.Sprintf("%d %s %d", day, month, year)
 }
+
+// FormatIndonesianDateTime memformat objek time.Time menjadi string tanggal dan waktu dalam Bahasa Indonesia.
+// Contoh: "22 Juni 2025 14:05:08"
+func FormatIndonesianDateTime(t time.Time) string {
+	months := []string{
+		"Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+	}
+	day := t.Day()
+	month := months[t.Month()-1]
+	year := t.Year()
+	hour := t.Hour()
+	minute := t.Minute()
+	second := t.Second()
+	return fmt.Sprintf("%02d %s %d %02d:%02d:%02d", day, month, year, hour, minute, second)
+}
