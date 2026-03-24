@@ -66,9 +66,15 @@ func (s *ExportServices) ExportExpensesToPDF(branchID string, month string) ([]b
 	// === TABLE HEADERS ===
 	headerRowContent := row.New(8).Add(
 		col.New(2).WithStyle(headerCell()).Add(text.New("ID", headerTextProps())),
-		col.New(6).WithStyle(headerCell()).Add(text.New("DESKRIPSI", headerTextProps())),
+		col.New(4).WithStyle(headerCell()).Add(text.New("DESKRIPSI", headerTextProps())),
 		col.New(2).WithStyle(headerCell()).Add(text.New("TANGGAL", headerTextProps())),
-		col.New(2).WithStyle(headerCell()).Add(text.New("TOTAL", headerTextProps())),
+		col.New(2).WithStyle(headerCell()).Add(text.New("PEMBAYARAN", headerTextProps())),
+		col.New(2).WithStyle(headerCell()).Add(text.New("TOTAL", props.Text{
+			Size:  10,
+			Style: fontstyle.Bold,
+			Color: &props.Color{Red: 255, Green: 255, Blue: 255},
+			Align: "right",
+		})),
 	)
 	m.AddRows(headerRowContent)
 
@@ -115,9 +121,13 @@ func (s *ExportServices) ExportExpensesToPDF(branchID string, month string) ([]b
 		m.AddRows(
 			row.New(8).Add(
 				col.New(2).WithStyle(cellStyle).Add(text.New(e.ID, textProps)),
-				col.New(6).WithStyle(cellStyle).Add(text.New(e.Description, textProps)),
+				col.New(4).WithStyle(cellStyle).Add(text.New(e.Description, textProps)),
 				col.New(2).WithStyle(cellStyle).Add(text.New(e.ExpenseDate.Format("02/01/2006"), textProps)),
-				col.New(2).WithStyle(cellStyle).Add(text.New(formatRupiah(e.TotalExpense), textProps)),
+				col.New(2).WithStyle(cellStyle).Add(text.New(string(e.Payment), textProps)),
+				col.New(2).WithStyle(cellStyle).Add(text.New(formatRupiah(e.TotalExpense), props.Text{
+					Size:  9,
+					Align: "right",
+				})),
 			),
 		)
 
