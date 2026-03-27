@@ -20,7 +20,7 @@ func SchedulerJobs(db *gorm.DB) (*cron.Cron, error) {
 	c := cron.New(cron.WithLocation(loc))
 
 	// Tambahkan job
-	c.AddFunc("0 23 * * *", func() {
+	c.AddFunc("10 23 * * *", func() {
 		// 1.) Backup database
 		if err := DBDump(); err != nil {
 			log.Printf("[SCHEDULER] Error running db dump: %v", err)
