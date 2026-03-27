@@ -26,6 +26,14 @@ const (
 	Inactive DataStatus = "inactive"
 )
 
+// Inisialisasi tipe kustom untuk ENUM DataEnums
+type DataEnums string
+
+const (
+	EnumTrue  DataEnums = "true"
+	EnumFalse DataEnums = "false"
+)
+
 // Inisialisasi tipe kustom untuk ENUM UserRole
 type UserRole string
 

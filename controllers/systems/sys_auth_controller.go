@@ -185,14 +185,14 @@ func SetBranch(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to set branch", "Unable to retrieve user role")
 	}
 
-	// Ambil default_member, quota, dan subscription_type dari branch
+	// Ambil default_member, quota, subscription_type, dan real_asset dari branch
 	var branch models.Branch
-	if err := config.DB.Select("default_member, quota, subscription_type").Where("id = ?", request.BranchID).First(&branch).Error; err != nil {
+	if err := config.DB.Select("default_member, quota, subscription_type, real_asset").Where("id = ?", request.BranchID).First(&branch).Error; err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to set branch", "Unable to retrieve branch details")
 	}
 
 	// Buat token JWT baru dengan klaim branch_id dan user_role
-	newToken, err := generateBranchJWTWithRole(userID, request.BranchID, string(user.UserRole), branch.DefaultMember, branch.Quota, string(branch.SubscriptionType), user.Name)
+	newToken, err := generateBranchJWTWithRole(userID, request.BranchID, string(user.UserRole), branch.DefaultMember, branch.Quota, string(branch.SubscriptionType), string(branch.RealAsset), user.Name)
 	if err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to set branch", "Failed to generate new token")
 	}
@@ -206,7 +206,7 @@ func SetBranch(c *fiber.Ctx) error {
 	return helpers.JSONResponse(c, fiber.StatusOK, "Branch set successfully", newToken)
 }
 
-func generateBranchJWTWithRole(userID string, branchID string, userRole string, defaultMember string, quota int, subscriptionType string, namaUser string) (string, error) {
+func generateBranchJWTWithRole(userID string, branchID string, userRole string, defaultMember string, quota int, subscriptionType string, realAsset string, namaUser string) (string, error) {
 
 	// Hitung waktu sekarang dalam WIB
 	nowWIB := time.Now().In(config.Location)
@@ -221,6 +221,7 @@ func generateBranchJWTWithRole(userID string, branchID string, userRole string, 
 		"default_member":    defaultMember,
 		"quota":             quota,
 		"subscription_type": subscriptionType,
+		"real_asset":        realAsset,
 	}
 
 	// Buat token baru dengan klaim
@@ -241,7 +242,7 @@ func GetProfile(c *fiber.Ctx) error {
 	// Melakukan LEFT OUTER JOIN menggunakan GORM
 	if err := config.DB.
 		Table("user_branches usrbrc").
-		Select("usrbrc.user_id AS user_id, usr.name AS profile_name, usrbrc.branch_id AS branch_id, brc.branch_name AS branch_name, brc.address, brc.phone, brc.email, brc.sia_id, brc.sia_name, brc.psa_id, brc.psa_name, brc.sipa, brc.sipa_name, brc.aping_id, brc.aping_name, brc.bank_name, brc.account_name, brc.account_number, brc.tax_percentage, brc.journal_method, brc.branch_status, brc.license_date, brc.default_member AS default_member, mbr.name AS member_name").
+		Select("usrbrc.user_id AS user_id, usr.name AS profile_name, usrbrc.branch_id AS branch_id, brc.branch_name AS branch_name, brc.address, brc.phone, brc.email, brc.sia_id, brc.sia_name, brc.psa_id, brc.psa_name, brc.sipa, brc.sipa_name, brc.aping_id, brc.aping_name, brc.bank_name, brc.account_name, brc.account_number, brc.tax_percentage, brc.journal_method, brc.branch_status, brc.license_date, brc.default_member AS default_member, mbr.name AS member_name, brc.real_asset AS real_asset").
 		Joins("LEFT JOIN users usr ON usr.id = usrbrc.user_id").
 		Joins("LEFT JOIN branches brc ON brc.id = usrbrc.branch_id").
 		Joins("LEFT JOIN members mbr ON mbr.id = brc.default_member").

@@ -2,7 +2,6 @@ package crons
 
 import (
 	log "log"
-	os "os"
 	time "time"
 
 	helpers "github.com/heru-oktafian/fiber-apotek/helpers"
@@ -11,9 +10,6 @@ import (
 )
 
 func AssetCounter(db *gorm.DB) error {
-	// Tentukan apakah harus menghitung kredit riil dari assets
-	realAsset := os.Getenv("REAL_ASSET") == "TRUE"
-
 	// SQL query untuk menghitung nilai aset per cabang
 	query := `
 		SELECT 
@@ -36,43 +32,56 @@ func AssetCounter(db *gorm.DB) error {
 		return err
 	}
 
-	// Persiapkan peta kredit hanya jika REAL_ASSET=true
+	// Persiapkan peta kredit dan real_asset per cabang
 	creditMap := make(map[string]int)
-	if realAsset {
-		// Query untuk total pembelian kredit per cabang
-		creditQuery := `
-			SELECT 
-				branch_id,
-				COALESCE(SUM(total_purchase), 0) as total_credit
-			FROM 
-				purchases
-			WHERE 
-				payment = 'paid_by_credit'
-			GROUP BY 
-				branch_id
-		`
+	realAssetMap := make(map[string]string)
 
-		type BranchCredit struct {
-			BranchID    string
-			TotalCredit int
-		}
+	type BranchInfo struct {
+		ID        string
+		RealAsset string
+	}
+	var branchesInfo []BranchInfo
+	if err := db.Table("branches").Select("id, real_asset").Scan(&branchesInfo).Error; err != nil {
+		log.Printf("[ASSET COUNTER] Error querying branches info: %v", err)
+		return err
+	}
+	for _, b := range branchesInfo {
+		realAssetMap[b.ID] = b.RealAsset
+	}
 
-		var branchCredits []BranchCredit
-		if err := db.Raw(creditQuery).Scan(&branchCredits).Error; err != nil {
-			log.Printf("[ASSET COUNTER] Error querying branch credits: %v", err)
-			return err
-		}
+	// Query untuk total pembelian kredit per cabang
+	creditQuery := `
+		SELECT 
+			branch_id,
+			COALESCE(SUM(total_purchase), 0) as total_credit
+		FROM 
+			purchases
+		WHERE 
+			payment = 'paid_by_credit'
+		GROUP BY 
+			branch_id
+	`
 
-		// Buat map untuk lookup total kredit per branch
-		for _, credit := range branchCredits {
-			creditMap[credit.BranchID] = credit.TotalCredit
-		}
+	type BranchCredit struct {
+		BranchID    string
+		TotalCredit int
+	}
+
+	var branchCredits []BranchCredit
+	if err := db.Raw(creditQuery).Scan(&branchCredits).Error; err != nil {
+		log.Printf("[ASSET COUNTER] Error querying branch credits: %v", err)
+		return err
+	}
+
+	// Buat map untuk lookup total kredit per branch
+	for _, credit := range branchCredits {
+		creditMap[credit.BranchID] = credit.TotalCredit
 	}
 
 	// Menyimpan aset harian untuk setiap cabang
 	for _, asset := range branchAssets {
 		credit := 0
-		if realAsset {
+		if realAssetMap[asset.BranchID] == "true" {
 			credit = creditMap[asset.BranchID]
 		}
 		finalAsset := asset.TotalAsset - credit

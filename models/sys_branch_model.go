@@ -27,6 +27,7 @@ type Branch struct {
 	DefaultMember    string          `gorm:"type:varchar(15);not null" json:"default_member" validate:"required"`
 	SubscriptionType SubcriptionType `gorm:"type:subscription_type; default:'month'" json:"subscription_type" validate:"required"` // Kolom baru
 	Quota            int             `gorm:"type:integer;default:0" json:"quota"`
+	RealAsset        DataEnums       `gorm:"type:data_enums;default:'true'" json:"real_asset"`
 }
 
 // SetID adalah fungsi untuk menetapkan ID ke Branch
@@ -60,4 +61,5 @@ type ProfileStruct struct {
 	LicenseDate   time.Time     `gorm:"not null" json:"license_date" validate:"required"`
 	DefaultMember string        `gorm:"type:varchar(15);not null;default:'MEMBER000000001'" json:"default_member" validate:"required"`
 	MemberName    string        `gorm:"type:varchar(100);not null" json:"member_name" validate:"required"`
+	RealAsset     DataEnums     `gorm:"type:data_enums;default:'true'" json:"real_asset"`
 }
