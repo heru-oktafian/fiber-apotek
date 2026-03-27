@@ -21,12 +21,12 @@ func SchedulerJobs(db *gorm.DB) (*cron.Cron, error) {
 
 	// Tambahkan job
 	c.AddFunc("0 7 * * *", func() {
-		// 1.) Backup database
+		// 1. Backup database
 		if err := DBDump(); err != nil {
 			log.Printf("[SCHEDULER] Error running db dump: %v", err)
 		}
 
-		// 2.) Hitung asset
+		// 2. Hitung asset
 		if err := AssetCounter(db); err != nil {
 			log.Printf("[SCHEDULER] Error running asset counter: %v", err)
 		}
