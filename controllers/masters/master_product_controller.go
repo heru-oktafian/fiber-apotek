@@ -12,8 +12,33 @@ import (
 
 // CreateProduct buat Product
 func CreateProduct(c *fiber.Ctx) error {
-	// Creating new Product using helpers
-	return helpers.CreateResource(c, configs.DB, &models.Product{}, "PRD")
+	var product models.Product
+
+	if err := c.BodyParser(&product); err != nil {
+		return helpers.JSONResponse(c, fiber.StatusBadRequest, "Invalid input", err)
+	}
+
+	// Generate ID untuk product
+	product.ID = helpers.GenerateID("PRD")
+
+	// Set BranchID
+	branchID, _ := services.GetBranchID(c)
+	product.BranchID = branchID
+
+	// Set Stock default
+	product.Stock = 0
+
+	// Jika SKU kosong atau hanya berisi spasi, samakan dengan ID produk
+	if strings.TrimSpace(product.SKU) == "" {
+		product.SKU = product.ID
+	}
+
+	// Simpan ke database
+	if err := configs.DB.Create(&product).Error; err != nil {
+		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to create resource", err)
+	}
+
+	return helpers.JSONResponse(c, fiber.StatusOK, "Resource created successfully", &product)
 }
 
 // UpdateProduct update Product
