@@ -124,11 +124,11 @@ func GetAllUserBranch(c *fiber.Ctx) error {
 
 // New Function of GetUser in controller used to get user with branch
 func GetUserDetails(c *fiber.Ctx) error {
-	userID := c.Params("user_id")
+	userID := c.Params("id")
 
 	// Ambil user
 	var user models.User
-	if err := configs.DB.First(&user, "user_id = ?", userID).Error; err != nil {
+	if err := configs.DB.First(&user, "id = ?", userID).Error; err != nil {
 		return helpers.JSONResponse(c, fiber.StatusNotFound, "Pengguna tidak ditemukan", err)
 	}
 
