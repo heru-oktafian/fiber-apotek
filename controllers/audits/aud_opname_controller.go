@@ -302,7 +302,7 @@ func UpdateOpnameByID(c *fiber.Ctx) error {
 	} else {
 		total := 0
 		for _, item := range items {
-			total += item.SubTotal
+			total += (item.SubTotal - item.SubTotalExist)
 		}
 		opname.TotalOpname = total
 	}
