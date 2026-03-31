@@ -59,7 +59,7 @@ func GetAllActiveMobileOpnames(c *fiber.Ctx) error {
 		Order("pur.created_at DESC")
 
 	if err := query.Scan(&rawOpnames).Error; err != nil {
-		return helpers.JSONResponse(c, http.StatusInternalServerError, "Pengambilan opnames gagal", "Gagal mengambil data Opname")
+		return helpers.JSONResponse(c, http.StatusInternalServerError, "Pengambilan Opname gagal", "Gagal mengambil data Opname")
 	}
 
 	// Inisialisasi slice untuk hasil akhir yang diformat
