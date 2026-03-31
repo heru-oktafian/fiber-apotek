@@ -112,11 +112,11 @@ func OpnameProductStock(db *gorm.DB, productID string, qty int) error {
 func RecalculateTotalOpname(db *gorm.DB, opnameID string) error {
 	var totalAdjustment int64 // Ubah nama variabel untuk merefleksikan 'adjustment'
 
-	// Hitung total (sub_total_exist - sub_total) dari opname_items
-	// Menggunakan alias untuk kolom-kolom agar jelas dan melakukan operasi pengurangan langsung di query SQL
-	err := db.Table("opname_items").
-		Where("opname_id = ?", opnameID).
-		Select("COALESCE(SUM(sub_total - sub_total_exist), 0)"). // Perhitungan yang diminta
+	// Hitung total opname berdasarkan penjumlahan (qty * price) - (qty * p.purchase_price)
+	err := db.Table("opname_items oi").
+		Joins("JOIN products p ON oi.product_id = p.id").
+		Where("oi.opname_id = ?", opnameID).
+		Select("COALESCE(SUM((oi.qty * oi.price) - (oi.qty * p.purchase_price)), 0)").
 		Scan(&totalAdjustment).Error                             // Scan ke variabel totalAdjustment
 
 	if err != nil {
