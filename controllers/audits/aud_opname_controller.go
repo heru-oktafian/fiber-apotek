@@ -291,39 +291,26 @@ func UpdateOpnameByID(c *fiber.Ctx) error {
 
 	opname.UpdatedAt = nowWIB
 
-	// Hitung ulang total dari opname items
-	var items []models.OpnameItems
-	if err := db.Where("opname_id = ?", id).Find(&items).Error; err != nil {
-		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal mengambil item opname", err)
-	}
-
-	if len(items) == 0 {
-		opname.TotalOpname = 0
-	} else {
-		total := 0
-		for _, item := range items {
-			total += (item.SubTotal - item.SubTotalExist)
-		}
-		opname.TotalOpname = total
-	}
-
 	// Cek dan update Description
 	if input.Description != "" {
 		opname.Description = input.Description
 	}
 
-	// Simpan perubahan
+	// Simpan perubahan dasar terlebih dahulu
 	if err := db.Save(&opname).Error; err != nil {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal memperbarui opname", err)
 	}
 
-	// Sync report
-	if err := helpers.SyncOpnameReport(db, opname); err != nil {
-		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal menyinkronkan laporan opname", err)
+	// Hitung ulang total secara sinkron dan simpan hasil database langsung menggunakan helper RecalculateTotalOpname
+	// Helper RecalculateTotalOpname juga otomatis melakukan SyncOpnameReport.
+	if err := helpers.RecalculateTotalOpname(db, id); err != nil {
+		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal menghitung ulang total opname", err)
 	}
 
 	_ = helpers.AutoCleanupOpnames(db)
 
+	// Fetch again to return updated object
+	db.First(&opname, "id = ?", id)
 	return helpers.JSONResponse(c, http.StatusOK, "Opname berhasil diperbarui", opname)
 }
 
