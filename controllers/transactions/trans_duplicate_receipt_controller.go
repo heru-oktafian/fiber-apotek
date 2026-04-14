@@ -97,8 +97,6 @@ func CreateDuplicateReceipt(c *fiber.Ctx) error {
 		newStock := product.Stock - req.Items[i].Qty
 
 		// Update stock in Redis
-		cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-		services.UpdateSaleProductStockInRedisAsync(cacheKey, product.ID, newStock)
 
 		err = tx.Model(&models.Product{}).Where("id = ?", product.ID).Update("stock", newStock).Error
 		if err != nil {
@@ -400,17 +398,6 @@ func DeleteDuplicateReceipt(c *fiber.Ctx) error {
 		for _, item := range items {
 			_ = services.SubtractProductStock(db, item.ProductId, item.Qty)
 		}
-		// Update stock in Redis asynchronously
-		go func(items []models.DuplicateReceiptItems) {
-			cacheKey := fmt.Sprintf("%s:%s", duplicate_receipt.BranchID, duplicate_receipt.UserID)
-			for _, item := range items {
-				var prod models.Product
-				if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-					services.UpdateSaleProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-					services.UpdatePurchaseProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-				}
-			}
-		}(items)
 		db.Where("duplicate_receipt_id = ?", id).Delete(&models.DuplicateReceiptItems{})
 	}
 
@@ -442,9 +429,6 @@ type DuplicateReceiptRequest struct {
 // CreateDuplicateReceiptItem Function
 func CreateDuplicateReceiptItem(c *fiber.Ctx) error {
 	// Get branch and user IDs from middleware
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
-
 	var item models.DuplicateReceiptItems
 
 	db := configs.DB
@@ -482,12 +466,6 @@ func CreateDuplicateReceiptItem(c *fiber.Ctx) error {
 		// Supporting operations asynchronously
 		go func() {
 			// Update stock in Redis
-			cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-			var prod models.Product
-			if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-				services.UpdateSaleProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-			}
-
 			if err := reports.RecalculateTotalDuplicate(db, item.DuplicateReceiptId); err != nil {
 				fmt.Printf("Failed to recalculate total duplicate asynchronously: %v\n", err)
 			}
@@ -516,12 +494,6 @@ func CreateDuplicateReceiptItem(c *fiber.Ctx) error {
 	// Recalculate total and sync reports asynchronously
 	go func() {
 		// Update stock in Redis
-		cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-		var prod models.Product
-		if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-			services.UpdateSaleProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-		}
-
 		if err := reports.RecalculateTotalDuplicate(db, item.DuplicateReceiptId); err != nil {
 			fmt.Printf("Failed to recalculate total duplicate asynchronously: %v\n", err)
 		}
@@ -533,7 +505,7 @@ func CreateDuplicateReceiptItem(c *fiber.Ctx) error {
 			return
 		}
 
-		if err := reports.SyncDailyProfitReport(db, branchID, userID, duplicateReceipt.DuplicateReceiptDate, duplicateReceipt.TotalDuplicateReceipt, duplicateReceipt.ProfitEstimate, 0, 0); err != nil {
+		if err := reports.SyncDailyProfitReport(db, duplicateReceipt.BranchID, duplicateReceipt.UserID, duplicateReceipt.DuplicateReceiptDate, duplicateReceipt.TotalDuplicateReceipt, duplicateReceipt.ProfitEstimate, 0, 0); err != nil {
 			fmt.Printf("Failed to sync daily profit report asynchronously: %v\n", err)
 		}
 	}()
@@ -545,9 +517,6 @@ func CreateDuplicateReceiptItem(c *fiber.Ctx) error {
 func UpdateDuplicateReceiptItem(c *fiber.Ctx) error {
 	db := configs.DB
 	id := c.Params("id")
-
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
 
 	var existingItem models.DuplicateReceiptItems
 	if err := db.First(&existingItem, "id = ?", id).Error; err != nil {
@@ -591,19 +560,6 @@ func UpdateDuplicateReceiptItem(c *fiber.Ctx) error {
 
 	// Supporting operations asynchronously
 	go func() {
-		cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-		// Update stock in Redis for old product
-		var oldProd models.Product
-		if err := db.Select("stock").Where("id = ?", existingItem.ProductId).First(&oldProd).Error; err == nil {
-			services.UpdateSaleProductStockInRedisAsync(cacheKey, existingItem.ProductId, oldProd.Stock)
-		}
-
-		// Update stock in Redis for new product
-		var newProd models.Product
-		if err := db.Select("stock").Where("id = ?", updatedData.ProductId).First(&newProd).Error; err == nil {
-			services.UpdateSaleProductStockInRedisAsync(cacheKey, updatedData.ProductId, newProd.Stock)
-		}
-
 		if err := reports.RecalculateTotalDuplicate(db, existingItem.DuplicateReceiptId); err != nil {
 			fmt.Printf("Failed to recalculate total duplicate asynchronously: %v\n", err)
 		}
@@ -615,7 +571,7 @@ func UpdateDuplicateReceiptItem(c *fiber.Ctx) error {
 			return
 		}
 
-		if err := reports.SyncDailyProfitReport(db, branchID, userID, duplicateReceipt.DuplicateReceiptDate, duplicateReceipt.TotalDuplicateReceipt, duplicateReceipt.ProfitEstimate, 0, 0); err != nil {
+		if err := reports.SyncDailyProfitReport(db, duplicateReceipt.BranchID, duplicateReceipt.UserID, duplicateReceipt.DuplicateReceiptDate, duplicateReceipt.TotalDuplicateReceipt, duplicateReceipt.ProfitEstimate, 0, 0); err != nil {
 			fmt.Printf("Failed to sync daily profit report asynchronously: %v\n", err)
 		}
 	}()
@@ -627,9 +583,6 @@ func UpdateDuplicateReceiptItem(c *fiber.Ctx) error {
 func DeleteDuplicateReceiptItem(c *fiber.Ctx) error {
 	db := configs.DB
 	id := c.Params("id")
-
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
 
 	var item models.DuplicateReceiptItems
 	if err := db.First(&item, "id = ?", id).Error; err != nil {
@@ -649,12 +602,6 @@ func DeleteDuplicateReceiptItem(c *fiber.Ctx) error {
 	// Supporting operations asynchronously
 	go func() {
 		// Update stock in Redis
-		cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-		var prod models.Product
-		if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-			services.UpdateSaleProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-		}
-
 		if err := reports.RecalculateTotalDuplicate(db, item.DuplicateReceiptId); err != nil {
 			fmt.Printf("Failed to recalculate total duplicate asynchronously: %v\n", err)
 		}

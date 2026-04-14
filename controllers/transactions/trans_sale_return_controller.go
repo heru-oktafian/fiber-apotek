@@ -220,15 +220,6 @@ func CreateSaleReturnTransaction(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Gagal melakukan commit transaksi", err.Error())
 	}
 
-	// Update stock in Redis asynchronously
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-	for _, item := range req.SaleReturnItems {
-		var prod models.Product
-		if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-			services.UpdateSaleProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-		}
-	}
-
 	return helpers.JSONResponse(c, fiber.StatusOK, "Transaksi retur penjualan berhasil dibuat", fiber.Map{
 		"id":           saleReturn.ID,
 		"sale_id":      saleReturn.SaleId,

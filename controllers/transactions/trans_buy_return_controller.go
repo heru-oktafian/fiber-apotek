@@ -238,17 +238,6 @@ func CreateBuyReturnTransaction(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Gagal melakukan commit transaksi", err.Error())
 	}
 
-	// Update cache purchase products asynchronously
-	go func() {
-		cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-		for _, item := range req.BuyReturnItems {
-			var prod models.Product
-			if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-				services.UpdatePurchaseProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-			}
-		}
-	}()
-
 	return helpers.JSONResponse(c, fiber.StatusOK, "Transaksi retur pembelian berhasil dibuat", fiber.Map{
 		"id":           buyReturn.ID,
 		"purchase_id":  buyReturn.PurchaseId,

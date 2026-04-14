@@ -247,14 +247,6 @@ func CreatePurchaseItem(c *fiber.Ctx) error {
 			return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to recalculate total purchase", err)
 		}
 
-		branchID, _ := services.GetBranchID(c)
-		userID, _ := services.GetUserID(c)
-		cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-		var prod models.Product
-		if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-			services.UpdatePurchaseProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-		}
-
 		return helpers.JSONResponse(c, fiber.StatusOK, "Item updated successfully", existing)
 
 	} else if err != gorm.ErrRecordNotFound {
@@ -283,14 +275,6 @@ func CreatePurchaseItem(c *fiber.Ctx) error {
 
 	if err := reports.RecalculateTotalPurchase(db, item.PurchaseId); err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to recalculate total purchase", err)
-	}
-
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-	var prod models.Product
-	if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-		services.UpdatePurchaseProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
 	}
 
 	return helpers.JSONResponse(c, fiber.StatusOK, "Item added successfully", item)
@@ -351,20 +335,6 @@ func UpdatePurchaseItem(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to recalculate total purchase", err)
 	}
 
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-
-	var oldProd models.Product
-	if err := db.Select("stock").Where("id = ?", existingItem.ProductId).First(&oldProd).Error; err == nil {
-		services.UpdatePurchaseProductStockInRedisAsync(cacheKey, existingItem.ProductId, oldProd.Stock)
-	}
-
-	var newProd models.Product
-	if err := db.Select("stock").Where("id = ?", updatedItem.ProductId).First(&newProd).Error; err == nil {
-		services.UpdatePurchaseProductStockInRedisAsync(cacheKey, updatedItem.ProductId, newProd.Stock)
-	}
-
 	return helpers.JSONResponse(c, fiber.StatusOK, "Item updated successfully", existingItem)
 }
 
@@ -400,14 +370,6 @@ func DeletePurchaseItem(c *fiber.Ctx) error {
 	// Supporting operations synchronously
 	if err := reports.RecalculateTotalPurchase(db, item.PurchaseId); err != nil {
 		return helpers.JSONResponse(c, fiber.StatusInternalServerError, "Failed to recalculate total purchase", err)
-	}
-
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-	var prod models.Product
-	if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-		services.UpdatePurchaseProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
 	}
 
 	return helpers.JSONResponse(c, fiber.StatusOK, "Item deleted successfully", item)

@@ -319,10 +319,6 @@ func DeleteOpnameByID(c *fiber.Ctx) error {
 	db := configs.DB
 	id := c.Params("id")
 
-	// Ambil branch ID dan user ID dari token
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
-
 	// Ambil opname
 	var opname models.Opnames
 	if err := db.First(&opname, "id = ?", id).Error; err != nil {
@@ -354,10 +350,6 @@ func DeleteOpnameByID(c *fiber.Ctx) error {
 	if err := db.Delete(&opname).Error; err != nil {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal menghapus opname", err)
 	}
-
-	// Invalidate cache opname products
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-	services.DeleteTemporaryOpnameProductCache(cacheKey)
 
 	return helpers.JSONResponse(c, http.StatusOK, "Opname berhasil dihapus", opname)
 }
@@ -417,9 +409,6 @@ func CreateOpnameItem(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, http.StatusBadRequest, "Opname ID tidak boleh kosong", nil)
 	}
 
-	// Ambil branch ID dan user ID dari token
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
 	// opname id already provided in input.OpnameId
 
 	// Ambil data produk untuk mendapatkan price, stock, dan purchase_price
@@ -480,10 +469,6 @@ func CreateOpnameItem(c *fiber.Ctx) error {
 			return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal menghitung ulang total opname: "+err.Error(), err)
 		}
 
-		// Invalidate cache opname products
-		cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-		services.DeleteTemporaryOpnameProductCache(cacheKey)
-
 		return helpers.JSONResponse(c, http.StatusOK, "Item opname berhasil diperbarui", existingItem)
 
 	} else if err != gorm.ErrRecordNotFound {
@@ -504,10 +489,6 @@ func CreateOpnameItem(c *fiber.Ctx) error {
 	if err := helpers.RecalculateTotalOpname(db, opnameItem.OpnameId); err != nil {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal menghitung ulang total opname: "+err.Error(), err)
 	}
-
-	// Invalidate cache opname products
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-	services.DeleteTemporaryOpnameProductCache(cacheKey)
 
 	return helpers.JSONResponse(c, http.StatusOK, "Item opname berhasil disimpan", opnameItem)
 }
@@ -598,35 +579,11 @@ func UpdateOpnameItemByID(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal memperbarui harga produk: "+err.Error(), err)
 	}
 
-	// Supporting operations asynchronously
-	// capture values from context now to avoid nil pointer in goroutine
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-	go func(branchID, userID, cacheKey string) {
-		// Update stock in Redis for both old and new products
-
-		// Update stock for new product
-		var newProd models.Product
-		if err := db.Select("stock").Where("id = ?", updatedItem.ProductId).First(&newProd).Error; err == nil {
-			services.UpdateOpnameProductStockInRedisAsync(cacheKey, updatedItem.ProductId, newProd.Stock)
-		}
-
-		// Update stock for old product if different
-		if updatedItem.ProductId != existingItem.ProductId {
-			var oldProd models.Product
-			if err := db.Select("stock").Where("id = ?", existingItem.ProductId).First(&oldProd).Error; err == nil {
-				services.UpdateOpnameProductStockInRedisAsync(cacheKey, existingItem.ProductId, oldProd.Stock)
-			}
-		}
-
+	go func() {
 		if err := helpers.RecalculateTotalOpname(db, existingItem.OpnameId); err != nil {
 			fmt.Printf("Failed to recalculate total opname asynchronously: %v\n", err)
 		}
-
-		// Invalidate cache opname products
-		services.DeleteTemporaryOpnameProductCache(cacheKey)
-	}(branchID, userID, cacheKey)
+	}()
 
 	return helpers.JSONResponse(c, http.StatusOK, "Item berhasil diperbarui", existingItem)
 }
@@ -655,77 +612,35 @@ func DeleteOpnameItemByID(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal menghapus item: "+err.Error(), err)
 	}
 
-	// Supporting operations asynchronously
-	// capture context-derived values upfront to avoid nil pointer later
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-	go func(cacheKey string, item models.OpnameItems) {
-		// Update stock in Redis
-		var prod models.Product
-		if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-			services.UpdateOpnameProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-		}
-
+	go func(item models.OpnameItems) {
 		if err := helpers.RecalculateTotalOpname(db, item.OpnameId); err != nil {
 			fmt.Printf("Failed to recalculate total opname asynchronously: %v\n", err)
 		}
-
-		// Invalidate cache opname products
-		services.DeleteTemporaryOpnameProductCache(cacheKey)
-	}(cacheKey, item)
+	}(item)
 
 	return helpers.JSONResponse(c, http.StatusOK, "Item berhasil dihapus", item)
 }
 
 // GetBuyProductsCombobox dengan pencarian berdasarkan body
 func GetProductsComboboxByName(c *fiber.Ctx) error {
-	// Ambil branch ID dan user ID dari token
-	branch_id, _ := services.GetBranchID(c)
-	user_id, _ := services.GetUserID(c)
-
-	// Bersihkan dan ubah ke lowercase
+	branchID, _ := services.GetBranchID(c)
 	search := strings.TrimSpace(strings.ToLower(c.Query("search")))
 
-	// Buat cache key
-	cacheKey := fmt.Sprintf("%s:%s", branch_id, user_id)
+	var prodCombo []models.ComboboxProducts
+	query := configs.DB.Table("products pro").
+		Select("pro.id AS pro_id, pro.name AS pro_name, pro.unit_id, pro.stock, unt.name AS unit_name, pro.purchase_price AS price").
+		Joins("LEFT JOIN units unt ON unt.id = pro.unit_id").
+		Where("pro.branch_id = ?", branchID)
 
-	// Coba ambil dari cache Redis
-	prodCombo, err := services.GetTemporaryOpnameProductCache(cacheKey)
-	if err != nil {
-		return helpers.JSONResponse(c, http.StatusInternalServerError, "Gagal mengambil cache", err)
-	}
-
-	// Jika tidak ada di cache, ambil dari database
-	if prodCombo == nil {
-		// Query dasar tanpa filter search
-		query := configs.DB.Table("products pro").
-			Select("pro.id AS pro_id, pro.name AS pro_name, pro.unit_id, pro.stock, unt.name AS unit_name, pro.purchase_price AS price").
-			Joins("LEFT JOIN units unt ON unt.id = pro.unit_id").
-			Where("pro.branch_id = ?", branch_id).
-			Order("pro.name ASC")
-
-		// Eksekusi query
-		if err := query.Find(&prodCombo).Error; err != nil {
-			return helpers.JSONResponse(c, http.StatusNotFound, "Combobox tidak ditemukan", err)
-		}
-
-		// Simpan ke cache Redis
-		if err := services.SetTemporaryOpnameProductCache(cacheKey, prodCombo); err != nil {
-			// Log error tapi jangan gagal request
-			fmt.Printf("Failed to save opname product cache: %v\n", err)
-		}
-	}
-
-	// Filter berdasarkan search jika ada
 	if search != "" {
-		var filtered []models.ComboboxProducts
-		for _, prod := range prodCombo {
-			if strings.Contains(strings.ToLower(prod.ProName), search) { // Asumsi description tidak ada, atau tambahkan jika perlu
-				filtered = append(filtered, prod)
-			}
-		}
-		prodCombo = filtered
+		like := "%" + search + "%"
+		query = query.Where("LOWER(pro.name) LIKE ? OR LOWER(pro.id) LIKE ?", like, like)
+	}
+
+	query = query.Order("pro.name ASC")
+
+	if err := query.Scan(&prodCombo).Error; err != nil {
+		return helpers.JSONResponse(c, http.StatusNotFound, "Combobox tidak ditemukan", err)
 	}
 
 	return helpers.JSONResponse(c, http.StatusOK, "Data Combobox ditemukan", prodCombo)

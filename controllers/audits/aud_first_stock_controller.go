@@ -177,19 +177,6 @@ func DeleteFirstStock(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, "Failed to delete FirstStock", err)
 	}
 
-	// Update cache purchase products asynchronously
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-	go func() {
-		for _, item := range items {
-			var prod models.Product
-			if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-				services.UpdateSaleProductStockInRedisAsync(cacheKey, item.ProductId, item.Qty)
-			}
-		}
-	}()
-
 	return helpers.JSONResponse(c, http.StatusOK, "FirstStock deleted successfully", first_stock)
 }
 
@@ -224,17 +211,7 @@ func CreateFirstStockItem(c *fiber.Ctx) error {
 			return helpers.JSONResponse(c, http.StatusInternalServerError, "Failed to update product price", err)
 		}
 
-		// Supporting operations asynchronously
-		branchID, _ := services.GetBranchID(c)
-		userID, _ := services.GetUserID(c)
-		cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
 		go func() {
-			// Update stock in Redis
-			var prod models.Product
-			if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-				services.UpdateSaleProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-			}
-
 			if err := RecalculateTotalFirstStock(db, item.FirstStockId); err != nil {
 				fmt.Printf("Failed to recalculate total FirstStock asynchronously: %v\n", err)
 			}
@@ -265,17 +242,7 @@ func CreateFirstStockItem(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, "Failed to update product price", err)
 	}
 
-	// Supporting operations asynchronously
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
 	go func() {
-		// Update stock in Redis
-		var prod models.Product
-		if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-			services.UpdateSaleProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-		}
-
 		if err := RecalculateTotalFirstStock(db, item.FirstStockId); err != nil {
 			fmt.Printf("Failed to recalculate total FirstStock asynchronously: %v\n", err)
 		}
@@ -324,27 +291,7 @@ func UpdateFirstStockItem(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, "Failed to update product price", err)
 	}
 
-	// Supporting operations asynchronously
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
 	go func() {
-		// Update stock in Redis for both old and new products
-
-		// Update stock for new product
-		var newProd models.Product
-		if err := db.Select("stock").Where("id = ?", updatedItem.ProductId).First(&newProd).Error; err == nil {
-			services.UpdateSaleProductStockInRedisAsync(cacheKey, updatedItem.ProductId, newProd.Stock)
-		}
-
-		// Update stock for old product if different
-		if updatedItem.ProductId != existingItem.ProductId {
-			var oldProd models.Product
-			if err := db.Select("stock").Where("id = ?", existingItem.ProductId).First(&oldProd).Error; err == nil {
-				services.UpdateSaleProductStockInRedisAsync(cacheKey, existingItem.ProductId, oldProd.Stock)
-			}
-		}
-
 		if err := RecalculateTotalFirstStock(db, existingItem.FirstStockId); err != nil {
 			fmt.Printf("Failed to recalculate total FirstStock asynchronously: %v\n", err)
 		}
@@ -373,17 +320,7 @@ func DeleteFirstStockItem(c *fiber.Ctx) error {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, "Failed to delete FirstStock item", err)
 	}
 
-	// Supporting operations asynchronously
-	branchID, _ := services.GetBranchID(c)
-	userID, _ := services.GetUserID(c)
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
 	go func() {
-		// Update stock in Redis
-		var prod models.Product
-		if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-			services.UpdateSaleProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-		}
-
 		if err := RecalculateTotalFirstStock(db, item.FirstStockId); err != nil {
 			fmt.Printf("Failed to recalculate total FirstStock asynchronously: %v\n", err)
 		}
@@ -734,17 +671,6 @@ func CreateFirstStockTransaction(c *fiber.Ctx) error {
 	if err != nil {
 		return helpers.JSONResponse(c, http.StatusInternalServerError, "Failed to commit database transaction for first stock", err)
 	}
-
-	// Update cache purchase products asynchronously
-	cacheKey := fmt.Sprintf("%s:%s", branchID, userID)
-	go func() {
-		for _, item := range firstStockItemsToCreate {
-			var prod models.Product
-			if err := db.Select("stock").Where("id = ?", item.ProductId).First(&prod).Error; err == nil {
-				services.UpdateSaleProductStockInRedisAsync(cacheKey, item.ProductId, prod.Stock)
-			}
-		}
-	}()
 
 	// --- Mengkonstruksi Objek Respon ---
 	response := models.FirstStockTransactionResponse{

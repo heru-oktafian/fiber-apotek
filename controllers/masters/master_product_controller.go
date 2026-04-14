@@ -102,7 +102,6 @@ func CmbProdSale(c *fiber.Ctx) error {
 	branch_id, _ := services.GetBranchID(c)
 	search := strings.TrimSpace(c.Query("search"))
 
-	// Jika tidak ada di cache, lakukan query ke database
 	var cmbProducts []models.ProdSaleCombo
 
 	query := configs.DB.Table("products").
@@ -127,7 +126,6 @@ func CmbProdPurchase(c *fiber.Ctx) error {
 	branch_id, _ := services.GetBranchID(c)
 	search := strings.TrimSpace(c.Query("search"))
 
-	// Jika tidak ada di cache, lakukan query ke database
 	var cmbProducts []models.ProdPurchaseCombo
 
 	query := configs.DB.Table("products").
